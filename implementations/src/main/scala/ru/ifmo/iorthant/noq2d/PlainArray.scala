@@ -24,9 +24,10 @@ class PlainArray[@specialized(Specialization.defaultSet) T](implicit m: Monoid[T
     new DataWrapper[T](point, value).addTo(dataPoints)
   }
 
-  override def addQueryPoint(point: Array[Double],
-                             tracker: NoUpdateIncrementalOrthantSearch.UpdateTracker[T]): QueryPointHandle = {
-    new QueryWrapper[T](point, makeQuery(point), tracker).addTo(queryPoints)
+  override def addQueryPoint[I](point: Array[Double],
+                                tracker: NoUpdateIncrementalOrthantSearch.UpdateTracker[T, I],
+                                identifier: I): QueryPointHandle = {
+    new QueryWrapperImpl[T, I](point, makeQuery(point), tracker, identifier).addTo(queryPoints)
   }
 
   override def makeQuery(point: Array[Double]): T = {
@@ -57,19 +58,30 @@ class PlainArray[@specialized(Specialization.defaultSet) T](implicit m: Monoid[T
 object PlainArray {
   class DataWrapper[@specialized(Specialization.defaultSet) T](val point: Array[Double],
                                                                val value: T)
-  class QueryWrapper[@specialized(Specialization.defaultSet) T](val point: Array[Double],
-                                                                private var value: T,
-                                                                private val tracker: NoUpdateIncrementalOrthantSearch.UpdateTracker[T]) {
-    tracker.valueChanged(point, value)
+
+  trait QueryWrapper[@specialized(Specialization.defaultSet) T] {
+    def point: Array[Double]
+    def plus(v: T)(implicit m: Monoid[T]): Unit
+    def minus(v: T)(implicit m: HasMinus[T]): Unit
+  }
+
+  class QueryWrapperImpl[
+    @specialized(Specialization.defaultSet) T, I
+  ](val point: Array[Double],
+    private var value: T,
+    private val tracker: NoUpdateIncrementalOrthantSearch.UpdateTracker[T, I],
+    private val identifier: I) extends QueryWrapper[T] {
+
+    tracker.valueChanged(value, identifier)
 
     def plus(v: T)(implicit m: Monoid[T]): Unit = {
       value = m.plus(value, v)
-      tracker.valueChanged(point, value)
+      tracker.valueChanged(value, identifier)
     }
 
     def minus(v: T)(implicit m: HasMinus[T]): Unit = {
       value = m.minus(value, v)
-      tracker.valueChanged(point, value)
+      tracker.valueChanged(value, identifier)
     }
   }
 }

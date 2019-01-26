@@ -5,7 +5,7 @@ import scala.collection.mutable.ArrayBuffer
 import ru.ifmo.iorthant.util.{HasMinus, Specialization}
 
 class TrackingDelegate[@specialized(Specialization.defaultSet) T](val impl: NoUpdateIncrementalOrthantSearch[T])
-  extends NoUpdateIncrementalOrthantSearch[T] with NoUpdateIncrementalOrthantSearch.UpdateTracker[T] {
+  extends NoUpdateIncrementalOrthantSearch[T] with NoUpdateIncrementalOrthantSearch.UpdateTracker[T, Array[Double]] {
   private val myEvents = new ArrayBuffer[TrackingDelegate.ValueChanged[T]]()
 
   override type DataPointHandle = impl.DataPointHandle
@@ -13,10 +13,11 @@ class TrackingDelegate[@specialized(Specialization.defaultSet) T](val impl: NoUp
 
   override def addDataPoint(point: Array[Double], value: T): DataPointHandle = impl.addDataPoint(point, value)
 
-  def addQueryPoint(point: Array[Double]): QueryPointHandle = impl.addQueryPoint(point, this)
+  def addQueryPoint(point: Array[Double]): QueryPointHandle = impl.addQueryPoint(point, this, point)
 
-  override def addQueryPoint(point: Array[Double],
-                             tracker: NoUpdateIncrementalOrthantSearch.UpdateTracker[T]): QueryPointHandle = addQueryPoint(point)
+  override def addQueryPoint[I](point: Array[Double],
+                                tracker: NoUpdateIncrementalOrthantSearch.UpdateTracker[T, I],
+                                identifier: I): QueryPointHandle = addQueryPoint(point)
 
   override def makeQuery(point: Array[Double]): T = impl.makeQuery(point)
 
@@ -25,7 +26,7 @@ class TrackingDelegate[@specialized(Specialization.defaultSet) T](val impl: NoUp
 
   override def removeQueryPoint(handle: QueryPointHandle): Unit = impl.removeQueryPoint(handle)
 
-  override def valueChanged(point: Array[Double], value: T): Unit = myEvents += TrackingDelegate.ValueChanged(point, value)
+  override def valueChanged(value: T, point: Array[Double]): Unit = myEvents += TrackingDelegate.ValueChanged(point, value)
 
   def expectChange(point: Array[Double], value: T): Unit = {
     val vc = TrackingDelegate.ValueChanged(point, value)

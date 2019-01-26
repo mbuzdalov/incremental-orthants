@@ -65,14 +65,9 @@ abstract class HandCraftedTests {
   @Test
   def smokeTest(): Unit = {
     case class Data(point: Array[Double], value: Int)
-    case class Query(point: Array[Double]) extends NoUpdateIncrementalOrthantSearch.UpdateTracker[Int] {
+    case class Query(point: Array[Double]) {
       var realValue: Int = 0
       var expectedValue: Int = 0
-
-      override def valueChanged(point: Array[Double], value: Int): Unit = {
-        Assert.assertEquals(this.point, point)
-        realValue = value
-      }
 
       def updateWithNewData(d: Data): Unit = {
         if (Dominance.strict(d.point, point)) {
@@ -82,6 +77,12 @@ abstract class HandCraftedTests {
 
       def validate(): Unit = {
         Assert.assertEquals(expectedValue, realValue)
+      }
+    }
+
+    val tracker = new NoUpdateIncrementalOrthantSearch.UpdateTracker[Int, Query] {
+      override def valueChanged(value: Int, identifier: Query): Unit = {
+        identifier.realValue = value
       }
     }
 
@@ -106,7 +107,7 @@ abstract class HandCraftedTests {
           val q = Query(newQueryPoint)
           queryPoints += q
           for (d <- dataPoints) q.updateWithNewData(d)
-          ds.addQueryPoint(newQueryPoint, q)
+          ds.addQueryPoint(newQueryPoint, tracker, q)
           queryPoints.foreach(_.validate())
         }
       }
