@@ -1,6 +1,12 @@
 package ru.ifmo.iorthant.noq2d
 
-import org.junit.Test
+import java.util.Random
+
+import scala.collection.mutable.ArrayBuffer
+
+import org.junit.{Assert, Test}
+
+import ru.ifmo.iorthant.util.Dominance
 
 abstract class HandCraftedTests {
   protected implicit final val m: DefaultIntMonoid.type = DefaultIntMonoid
@@ -54,6 +60,57 @@ abstract class HandCraftedTests {
     ds.addQueryPoint(p0)
     ds.expectChange(p0, 7)
     ds.expectNoOtherChange()
+  }
+
+  @Test
+  def smokeTest(): Unit = {
+    case class Data(point: Array[Double], value: Int)
+    case class Query(point: Array[Double]) extends NoUpdateIncrementalOrthantSearch.UpdateTracker[Int] {
+      var realValue: Int = 0
+      var expectedValue: Int = 0
+
+      override def valueChanged(point: Array[Double], value: Int): Unit = {
+        Assert.assertEquals(this.point, point)
+        realValue = value
+      }
+
+      def updateWithNewData(d: Data): Unit = {
+        if (Dominance.strict(d.point, point)) {
+          expectedValue += d.value
+        }
+      }
+
+      def validate(): Unit = {
+        Assert.assertEquals(expectedValue, realValue)
+      }
+    }
+
+    val rng = new Random(8245435464734641L)
+
+    for (dim <- 1 to 6) {
+      val dataPoints = new ArrayBuffer[Data]()
+      val queryPoints = new ArrayBuffer[Query]()
+      val ds = makeDataStructure()
+
+      for (_ <- 0 to 1000) {
+        if (rng.nextBoolean()) {
+          val newDataPoint = Array.fill(dim)(rng.nextInt(10).toDouble)
+          val newDataValue = rng.nextInt(623524352) - 383253461
+          val d = Data(newDataPoint, newDataValue)
+          dataPoints += d
+          for (q <- queryPoints) q.updateWithNewData(d)
+          ds.addDataPoint(newDataPoint, newDataValue)
+          queryPoints.foreach(_.validate())
+        } else {
+          val newQueryPoint = Array.fill(dim)(rng.nextInt(10).toDouble)
+          val q = Query(newQueryPoint)
+          queryPoints += q
+          for (d <- dataPoints) q.updateWithNewData(d)
+          ds.addQueryPoint(newQueryPoint, q)
+          queryPoints.foreach(_.validate())
+        }
+      }
+    }
   }
 }
 
