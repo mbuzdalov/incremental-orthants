@@ -1,6 +1,6 @@
-package ru.ifmo.iorthant.collection
+package ru.ifmo.iorthant.util
 
 trait Monoid[@specialized(Specialization.defaultSet) T] {
   def zero: T
-  def plus(a0: T, a1: T): T
+  def plus(lhs: T, rhs: T): T
 }
