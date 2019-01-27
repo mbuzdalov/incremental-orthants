@@ -75,8 +75,8 @@ abstract class HandCraftedTests {
         }
       }
 
-      def validate(): Unit = {
-        Assert.assertEquals(expectedValue, realValue)
+      def validate(dim: Int, idx: Int): Unit = {
+        Assert.assertEquals(s"dim = $dim, idx = $idx", expectedValue, realValue)
       }
     }
 
@@ -93,7 +93,7 @@ abstract class HandCraftedTests {
       val queryPoints = new ArrayBuffer[Query]()
       val ds = makeDataStructure()
 
-      for (_ <- 0 to 1000) {
+      for (j <- 0 to 1000) {
         if (rng.nextBoolean()) {
           val newDataPoint = Array.fill(dim)(rng.nextInt(10).toDouble)
           val newDataValue = rng.nextInt(623524352) - 383253461
@@ -101,14 +101,14 @@ abstract class HandCraftedTests {
           dataPoints += d
           for (q <- queryPoints) q.updateWithNewData(d)
           ds.addDataPoint(newDataPoint, newDataValue)
-          queryPoints.foreach(_.validate())
+          queryPoints.foreach(_.validate(dim, j))
         } else {
           val newQueryPoint = Array.fill(dim)(rng.nextInt(10).toDouble)
           val q = Query(newQueryPoint)
           queryPoints += q
           for (d <- dataPoints) q.updateWithNewData(d)
           ds.addQueryPoint(newQueryPoint, tracker, q)
-          queryPoints.foreach(_.validate())
+          queryPoints.foreach(_.validate(dim, j))
         }
       }
     }
@@ -118,5 +118,8 @@ abstract class HandCraftedTests {
 object HandCraftedTests {
   class PlainArrayTests extends HandCraftedTests {
     override def makeDataStructure(): NoUpdateIncrementalOrthantSearch[Int] = new PlainArray[Int]()
+  }
+  class SimpleKDTests extends HandCraftedTests {
+    override def makeDataStructure(): NoUpdateIncrementalOrthantSearch[Int] = new SimpleKD[Int]()
   }
 }
