@@ -35,6 +35,7 @@ class SimpleKD[@specialized(Specialization.defaultSet) T](implicit m: Monoid[T])
 
   override def removeDataPoint(handle: DataPointHandle)
                               (implicit hm: HasMinus[T]): Unit = {
+    dataPoints = dataPoints.remove(handle.point, handle)
     queryPoints.forDominating(new SimpleKD.RemoveContext[T](Dominance.negate(handle.point), handle.value))
   }
 

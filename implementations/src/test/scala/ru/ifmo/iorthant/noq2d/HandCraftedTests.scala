@@ -64,14 +64,20 @@ abstract class HandCraftedTests {
 
   @Test
   def smokeTest(): Unit = {
-    case class Data(point: Array[Double], value: Int)
-    case class Query(point: Array[Double]) {
+    class Data(val point: Array[Double], val value: Int)
+    class Query(val point: Array[Double]) {
       var realValue: Int = 0
       var expectedValue: Int = 0
 
-      def updateWithNewData(d: Data): Unit = {
+      def addData(d: Data): Unit = {
         if (Dominance.strict(d.point, point)) {
           expectedValue += d.value
+        }
+      }
+
+      def removeData(d: Data): Unit = {
+        if (Dominance.strict(d.point, point)) {
+          expectedValue -= d.value
         }
       }
 
@@ -89,27 +95,43 @@ abstract class HandCraftedTests {
     val rng = new Random(8245435464734641L)
 
     for (dim <- 1 to 6) {
-      val dataPoints = new ArrayBuffer[Data]()
-      val queryPoints = new ArrayBuffer[Query]()
       val ds = makeDataStructure()
+
+      class DataEx(point: Array[Double], value: Int, val handle: ds.DataPointHandle) extends Data(point, value)
+      class QueryEx(point: Array[Double]) extends Query(point) {
+        val handle: ds.QueryPointHandle = ds.addQueryPoint(point, tracker, this)
+      }
+
+      val dataPoints = new ArrayBuffer[DataEx]()
+      val queryPoints = new ArrayBuffer[QueryEx]()
 
       for (j <- 0 to 1000) {
         if (rng.nextBoolean()) {
-          val newDataPoint = Array.fill(dim)(rng.nextInt(10).toDouble)
-          val newDataValue = rng.nextInt(623524352) - 383253461
-          val d = Data(newDataPoint, newDataValue)
-          dataPoints += d
-          for (q <- queryPoints) q.updateWithNewData(d)
-          ds.addDataPoint(newDataPoint, newDataValue)
-          queryPoints.foreach(_.validate(dim, j))
+          if (dataPoints.nonEmpty && rng.nextInt(10) < 3) {
+            val d = dataPoints(rng.nextInt(dataPoints.size))
+            dataPoints -= d
+            for (q <- queryPoints) q.removeData(d)
+            ds.removeDataPoint(d.handle)
+          } else {
+            val newDataPoint = Array.fill(dim)(rng.nextInt(10).toDouble)
+            val newDataValue = rng.nextInt(623524352) - 383253461
+            val d = new DataEx(newDataPoint, newDataValue, ds.addDataPoint(newDataPoint, newDataValue))
+            dataPoints += d
+            for (q <- queryPoints) q.addData(d)
+          }
         } else {
-          val newQueryPoint = Array.fill(dim)(rng.nextInt(10).toDouble)
-          val q = Query(newQueryPoint)
-          queryPoints += q
-          for (d <- dataPoints) q.updateWithNewData(d)
-          ds.addQueryPoint(newQueryPoint, tracker, q)
-          queryPoints.foreach(_.validate(dim, j))
+          if (queryPoints.nonEmpty && rng.nextInt(10) < 3) {
+            val q = queryPoints(rng.nextInt(queryPoints.size))
+            queryPoints -= q
+            ds.removeQueryPoint(q.handle)
+          } else {
+            val newQueryPoint = Array.fill(dim)(rng.nextInt(10).toDouble)
+            val q = new QueryEx(newQueryPoint) // adds itself to the data structure
+            queryPoints += q
+            for (d <- dataPoints) q.addData(d)
+          }
         }
+        queryPoints.foreach(_.validate(dim, j))
       }
     }
   }
