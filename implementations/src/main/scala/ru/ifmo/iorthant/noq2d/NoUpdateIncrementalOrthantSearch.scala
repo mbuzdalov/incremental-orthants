@@ -1,10 +1,15 @@
 package ru.ifmo.iorthant.noq2d
 
+import scala.reflect.ClassTag
+
 import ru.ifmo.iorthant.util.{HasMinus, Specialization}
 
 trait NoUpdateIncrementalOrthantSearch[@specialized(Specialization.defaultSet) T] {
   type DataPointHandle
   type QueryPointHandle
+
+  implicit def dataPointHandleClassTag: ClassTag[DataPointHandle]
+  implicit def queryPointHandleClassTag: ClassTag[QueryPointHandle]
 
   def addDataPoint(point: Array[Double], value: T): DataPointHandle
   def addQueryPoint[I](point: Array[Double],

@@ -1,9 +1,10 @@
 package ru.ifmo.iorthant.noq2d
 
 import scala.collection.mutable.ArrayBuffer
+import scala.reflect.ClassTag
 
-import ru.ifmo.iorthant.util.{Dominance, HasMinus, Monoid, Specialization}
 import ru.ifmo.iorthant.util.Syntax._
+import ru.ifmo.iorthant.util.{Dominance, HasMinus, Monoid, Specialization}
 
 class PlainArray[@specialized(Specialization.defaultSet) T](implicit m: Monoid[T])
   extends NoUpdateIncrementalOrthantSearch[T] {
@@ -11,6 +12,9 @@ class PlainArray[@specialized(Specialization.defaultSet) T](implicit m: Monoid[T
 
   override type DataPointHandle = DataWrapper[T]
   override type QueryPointHandle = QueryWrapper[T]
+
+  override implicit def dataPointHandleClassTag: ClassTag[DataPointHandle] = implicitly[ClassTag[DataPointHandle]]
+  override implicit def queryPointHandleClassTag: ClassTag[QueryPointHandle] = implicitly[ClassTag[QueryPointHandle]]
 
   private val dataPoints = new ArrayBuffer[DataPointHandle]()
   private val queryPoints = new ArrayBuffer[QueryPointHandle]()

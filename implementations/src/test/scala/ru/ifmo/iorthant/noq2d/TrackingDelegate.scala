@@ -1,6 +1,7 @@
 package ru.ifmo.iorthant.noq2d
 
 import scala.collection.mutable.ArrayBuffer
+import scala.reflect.ClassTag
 
 import ru.ifmo.iorthant.util.{HasMinus, Specialization}
 
@@ -10,6 +11,9 @@ class TrackingDelegate[@specialized(Specialization.defaultSet) T](val impl: NoUp
 
   override type DataPointHandle = impl.DataPointHandle
   override type QueryPointHandle = impl.QueryPointHandle
+
+  override implicit def dataPointHandleClassTag: ClassTag[DataPointHandle] = impl.dataPointHandleClassTag
+  override implicit def queryPointHandleClassTag: ClassTag[impl.QueryPointHandle] = impl.queryPointHandleClassTag
 
   override def addDataPoint(point: Array[Double], value: T): DataPointHandle = impl.addDataPoint(point, value)
 
