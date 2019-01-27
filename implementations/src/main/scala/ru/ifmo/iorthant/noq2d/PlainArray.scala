@@ -1,7 +1,6 @@
 package ru.ifmo.iorthant.noq2d
 
 import scala.collection.mutable.ArrayBuffer
-import scala.reflect.ClassTag
 
 import ru.ifmo.iorthant.util.Syntax._
 import ru.ifmo.iorthant.util.{Dominance, HasMinus, Monoid, Specialization}

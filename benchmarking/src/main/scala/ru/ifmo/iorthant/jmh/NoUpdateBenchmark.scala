@@ -95,7 +95,7 @@ object NoUpdateBenchmark {
   class AlgorithmWrapper(algorithmName: String, nDataPoints: Int, nQueryPoints: Int) {
     final val algorithm: NoUpdateIncrementalOrthantSearch[Double] = algorithmName match {
       case "plain"     => new PlainArray[Double]()(TestMonoid)
-      case "kd-simple" => new SimpleKD[Double]()(TestMonoid)
+      case "kd-simple" => new SimpleKD[Double](0)(TestMonoid)
     }
     final val dataPoints = algorithm.newDataPointHandleArray(nDataPoints)
     final val queryPoints = algorithm.newQueryPointHandleArray(nDataPoints)

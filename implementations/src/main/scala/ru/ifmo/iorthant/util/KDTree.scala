@@ -15,6 +15,7 @@ abstract class KDTree[D] {
 object KDTree {
   trait TraverseContext[-D] {
     def point: Array[Double]
+    def dominates(lhs: Array[Double], rhs: Array[Double]): Boolean
     def update(data: D): Unit
   }
 
@@ -98,15 +99,13 @@ object KDTree {
     }
 
     override def forDominating(ctx: TraverseContext[D]): Unit = {
-      if (Dominance.strict(point, ctx.point)) {
+      if (ctx.dominates(point, ctx.point)) {
         for (d <- data) ctx.update(d)
       }
     }
 
     override def remove(point: Array[Double], data: D): KDTree[D] = {
-      require(Arrays.equal(this.point, point), "Deleting a different point from a leaf")
       val idx = this.data.indexOf(data)
-      require(idx >= 0, "Deleting a non-existent data from a leaf")
       this.data.remove(idx)
       if (this.data.isEmpty) empty else this
     }
