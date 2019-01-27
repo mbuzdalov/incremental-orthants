@@ -1,6 +1,7 @@
 lazy val commonSettings = Seq(
   organization := "ru.ifmo",
   libraryDependencies += junitInterface,
+  scalaVersion := "2.12.8",
   fork := true
 )
 
