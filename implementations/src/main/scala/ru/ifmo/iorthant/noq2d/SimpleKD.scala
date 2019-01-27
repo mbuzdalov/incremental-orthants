@@ -1,7 +1,5 @@
 package ru.ifmo.iorthant.noq2d
 
-import scala.reflect.ClassTag
-
 import ru.ifmo.iorthant.util._
 
 class SimpleKD[@specialized(Specialization.defaultSet) T](implicit m: Monoid[T])
@@ -10,8 +8,8 @@ class SimpleKD[@specialized(Specialization.defaultSet) T](implicit m: Monoid[T])
   override type DataPointHandle = PlainArray.DataWrapper[T]
   override type QueryPointHandle = PlainArray.QueryWrapper[T]
 
-  override implicit def dataPointHandleClassTag: ClassTag[DataPointHandle] = implicitly[ClassTag[DataPointHandle]]
-  override implicit def queryPointHandleClassTag: ClassTag[QueryPointHandle] = implicitly[ClassTag[QueryPointHandle]]
+  override def newDataPointHandleArray(n: Int): Array[DataPointHandle] = new Array[DataPointHandle](n)
+  override def newQueryPointHandleArray(n: Int): Array[QueryPointHandle] = new Array[QueryPointHandle](n)
 
   private var dataPoints: KDTree[DataPointHandle] = KDTree.empty
   private var queryPoints: KDTree[QueryPointHandle] = KDTree.empty

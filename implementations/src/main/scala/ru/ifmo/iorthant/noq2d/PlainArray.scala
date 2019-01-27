@@ -13,8 +13,8 @@ class PlainArray[@specialized(Specialization.defaultSet) T](implicit m: Monoid[T
   override type DataPointHandle = DataWrapper[T]
   override type QueryPointHandle = QueryWrapper[T]
 
-  override implicit def dataPointHandleClassTag: ClassTag[DataPointHandle] = implicitly[ClassTag[DataPointHandle]]
-  override implicit def queryPointHandleClassTag: ClassTag[QueryPointHandle] = implicitly[ClassTag[QueryPointHandle]]
+  override def newDataPointHandleArray(n: Int): Array[DataPointHandle] = new Array[DataPointHandle](n)
+  override def newQueryPointHandleArray(n: Int): Array[QueryPointHandle] = new Array[QueryPointHandle](n)
 
   private val dataPoints = new ArrayBuffer[DataPointHandle]()
   private val queryPoints = new ArrayBuffer[QueryPointHandle]()
