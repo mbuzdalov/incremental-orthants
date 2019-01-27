@@ -45,7 +45,7 @@ class NoUpdateBenchmark {
       val v = rng.nextDouble()
       Array.fill(d)(v)
     case "plane" =>
-      Array.fill(d)(rng.nextDouble()).whereAlso(a => a(0) = a.sum - a(0))
+      Array.fill(d)(rng.nextDouble()).whereAlso(a => a(0) += 1.0 - a.sum)
   }
 
   @Setup
