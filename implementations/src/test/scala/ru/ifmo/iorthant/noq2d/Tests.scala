@@ -8,7 +8,7 @@ import org.junit.{Assert, Test}
 
 import ru.ifmo.iorthant.util.Dominance
 
-abstract class HandCraftedTests {
+abstract class Tests {
   protected implicit final val m: DefaultIntMonoid.type = DefaultIntMonoid
 
   def makeDataStructure(): NoUpdateIncrementalOrthantSearch[Int]
@@ -137,11 +137,11 @@ abstract class HandCraftedTests {
   }
 }
 
-object HandCraftedTests {
-  class PlainArrayTests extends HandCraftedTests {
+object Tests {
+  class PlainArrayTests extends Tests {
     override def makeDataStructure(): NoUpdateIncrementalOrthantSearch[Int] = new PlainArray[Int]()
   }
-  class SimpleKDTests extends HandCraftedTests {
+  class SimpleKDTests extends Tests {
     override def makeDataStructure(): NoUpdateIncrementalOrthantSearch[Int] = new SimpleKD[Int]()
   }
 }

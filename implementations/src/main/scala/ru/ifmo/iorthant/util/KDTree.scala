@@ -80,7 +80,7 @@ object KDTree {
     }
 
     override def add(point: Array[Double], data: D, index: Int): KDTree[D] = {
-      if (Dominance.equal(this.point, point)) {
+      if (Arrays.equal(this.point, point)) {
         this.data += data
         this
       } else {
@@ -104,7 +104,7 @@ object KDTree {
     }
 
     override def remove(point: Array[Double], data: D): KDTree[D] = {
-      require(Dominance.equal(this.point, point), "Deleting a different point from a leaf")
+      require(Arrays.equal(this.point, point), "Deleting a different point from a leaf")
       val idx = this.data.indexOf(data)
       require(idx >= 0, "Deleting a non-existent data from a leaf")
       this.data.remove(idx)

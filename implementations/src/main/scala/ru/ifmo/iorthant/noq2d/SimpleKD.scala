@@ -17,7 +17,7 @@ class SimpleKD[@specialized(Specialization.defaultSet) T](implicit m: Monoid[T])
   override def addDataPoint(point: Array[Double], value: T): DataPointHandle = {
     val handle = new PlainArray.DataWrapper[T](point, value)
     dataPoints = dataPoints.add(point, handle)
-    queryPoints.forDominating(new SimpleKD.AddContext[T](Dominance.negate(point), value))
+    queryPoints.forDominating(new SimpleKD.AddContext[T](Arrays.negate(point), value))
     handle
   }
 
@@ -25,7 +25,7 @@ class SimpleKD[@specialized(Specialization.defaultSet) T](implicit m: Monoid[T])
                                 tracker: NoUpdateIncrementalOrthantSearch.UpdateTracker[T, I],
                                 identifier: I): QueryPointHandle = {
     val value = makeQuery(point)
-    val handle = new PlainArray.QueryWrapperImpl(Dominance.negate(point), value, tracker, identifier)
+    val handle = new PlainArray.QueryWrapperImpl(Arrays.negate(point), value, tracker, identifier)
     queryPoints = queryPoints.add(handle.point, handle)
     handle
   }
@@ -39,7 +39,7 @@ class SimpleKD[@specialized(Specialization.defaultSet) T](implicit m: Monoid[T])
   override def removeDataPoint(handle: DataPointHandle)
                               (implicit hm: HasMinus[T]): Unit = {
     dataPoints = dataPoints.remove(handle.point, handle)
-    queryPoints.forDominating(new SimpleKD.RemoveContext[T](Dominance.negate(handle.point), handle.value))
+    queryPoints.forDominating(new SimpleKD.RemoveContext[T](Arrays.negate(handle.point), handle.value))
   }
 
   override def removeQueryPoint(handle: QueryPointHandle): Unit = {
