@@ -44,13 +44,13 @@ class NaiveImplementation[T : ClassTag](kappa: Double, maxIndividuals: Int) exte
   }
 
   private def indicator(lhs: Array[Double], rhs: Array[Double], length: Int): Double = {
-    var result = lhs(0) - rhs(0)
+    var result = rhs(0) - lhs(0)
     var index = 1
     while (index < length) {
-      result = math.max(result, lhs(index) - rhs(index))
+      result = math.min(result, rhs(index) - lhs(index))
       index += 1
     }
-    -math.exp(-result / kappa)
+    math.exp(result / kappa)
   }
 
   private def collectIndicatorSum(fitness: Array[Double], index: Int): Double = {
@@ -58,7 +58,7 @@ class NaiveImplementation[T : ClassTag](kappa: Double, maxIndividuals: Int) exte
     var i = index - 1
     var sum = 0.0
     while (i >= 0) {
-      sum += indicator(objectives(i), fitness, len)
+      sum -= indicator(objectives(i), fitness, len)
       i -= 1
     }
     sum
@@ -68,7 +68,7 @@ class NaiveImplementation[T : ClassTag](kappa: Double, maxIndividuals: Int) exte
     val len = fitness.length
     var i = index - 1
     while (i >= 0) {
-      potentials(i) += indicator(fitness, objectives(i), len) * weight
+      potentials(i) -= indicator(fitness, objectives(i), len) * weight
       i -= 1
     }
   }
