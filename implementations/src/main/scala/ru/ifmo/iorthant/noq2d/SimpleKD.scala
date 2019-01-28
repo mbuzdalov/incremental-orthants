@@ -1,5 +1,7 @@
 package ru.ifmo.iorthant.noq2d
 
+import java.util.{ArrayDeque => JQueue}
+
 import ru.ifmo.iorthant.util._
 
 class SimpleKD[@specialized(Specialization.defaultSet) T](minNonStrictCoordinate: Int)(implicit m: Monoid[T])
@@ -13,11 +15,15 @@ class SimpleKD[@specialized(Specialization.defaultSet) T](minNonStrictCoordinate
 
   private var dataPoints: KDTree[DataPointHandle] = KDTree.empty
   private var queryPoints: KDTree[QueryPointHandle] = KDTree.empty
+  private val dataPointQueue: JQueue[KDTree[DataPointHandle]] = new JQueue()
+  private val queryPointQueue: JQueue[KDTree[QueryPointHandle]] = new JQueue()
 
   override def addDataPoint(point: Array[Double], value: T): DataPointHandle = {
     val handle = new PlainArray.DataWrapper[T](point, value)
     dataPoints = dataPoints.add(point, handle)
-    queryPoints.forDominating(new SimpleKD.AddContext[T](Arrays.negate(point), value, minNonStrictCoordinate))
+    queryPoints.traverseDominating(
+      new SimpleKD.AddContext[T](Arrays.negate(point), value, minNonStrictCoordinate),
+      queryPointQueue)
     handle
   }
 
@@ -32,14 +38,16 @@ class SimpleKD[@specialized(Specialization.defaultSet) T](minNonStrictCoordinate
 
   override def makeQuery(point: Array[Double]): T = {
     val context = new SimpleKD.QueryContext[T](point, minNonStrictCoordinate)
-    dataPoints.forDominating(context)
+    dataPoints.traverseDominating(context, dataPointQueue)
     context.value
   }
 
   override def removeDataPoint(handle: DataPointHandle)
                               (implicit hm: HasMinus[T]): Unit = {
     dataPoints = dataPoints.remove(handle.point, handle)
-    queryPoints.forDominating(new SimpleKD.RemoveContext[T](Arrays.negate(handle.point), handle.value, minNonStrictCoordinate))
+    queryPoints.traverseDominating(
+      new SimpleKD.RemoveContext[T](Arrays.negate(handle.point), handle.value, minNonStrictCoordinate),
+      queryPointQueue)
   }
 
   override def removeQueryPoint(handle: QueryPointHandle): Unit = {

@@ -1,14 +1,23 @@
 package ru.ifmo.iorthant.util
 
+import java.util.{ArrayDeque => JQueue}
 import java.util.concurrent.ThreadLocalRandom
 
 import scala.collection.mutable.ArrayBuffer
 
 abstract class KDTree[D] {
   final def add(point: Array[Double], data: D): KDTree[D] = add(point, data, 0)
+  final def traverseDominating(ctx: KDTree.TraverseContext[D], queue: JQueue[KDTree[D]]): Unit = {
+    queue.addLast(this)
+    while (!queue.isEmpty) {
+      val v = queue.pollLast()
+      v.processDominating(ctx, queue)
+    }
+  }
+
   protected def add(point: Array[Double], data: D, index: Int): KDTree[D]
+  protected def processDominating(ctx: KDTree.TraverseContext[D], queue: JQueue[KDTree[D]]): Unit
   def remove(point: Array[Double], data: D): KDTree[D]
-  def forDominating(ctx: KDTree.TraverseContext[D]): Unit
   def isEmpty: Boolean
 }
 
@@ -32,8 +41,8 @@ object KDTree {
   }
 
   class Empty[D] extends KDTree[D] {
-    override def add(point: Array[Double], data: D, index: Int): KDTree[D] = new Leaf(point, data)
-    override def forDominating(ctx: TraverseContext[D]): Unit = {}
+    override protected def add(point: Array[Double], data: D, index: Int): KDTree[D] = new Leaf(point, data)
+    override protected def processDominating(ctx: TraverseContext[D], queue: JQueue[KDTree[D]]): Unit = {}
     override def remove(point: Array[Double], data: D): KDTree[D] = {
       throw new IllegalArgumentException("No point can be in an empty KDTree")
     }
@@ -44,7 +53,7 @@ object KDTree {
   def empty[D]: Empty[D] = emptyInstance.asInstanceOf[Empty[D]]
 
   class Branch[D](val index: Int, val value: Double, var left: KDTree[D], var right: KDTree[D]) extends KDTree[D] {
-    override def add(point: Array[Double], data: D, index: Int): KDTree[D] = {
+    override protected def add(point: Array[Double], data: D, index: Int): KDTree[D] = {
       if (point(this.index) <= value) {
         left = left.add(point, data, (this.index + 1) % point.length)
         this
@@ -54,10 +63,10 @@ object KDTree {
       }
     }
 
-    override def forDominating(ctx: TraverseContext[D]): Unit = {
-      left.forDominating(ctx)
+    override protected def processDominating(ctx: TraverseContext[D], queue: JQueue[KDTree[D]]): Unit = {
+      queue.addLast(left)
       if (ctx.point(index) > value) {
-        right.forDominating(ctx)
+        queue.addLast(right)
       }
     }
 
@@ -80,7 +89,7 @@ object KDTree {
       this.data += data
     }
 
-    override def add(point: Array[Double], data: D, index: Int): KDTree[D] = {
+    override protected def add(point: Array[Double], data: D, index: Int): KDTree[D] = {
       if (Arrays.equal(this.point, point)) {
         this.data += data
         this
@@ -98,7 +107,7 @@ object KDTree {
       }
     }
 
-    override def forDominating(ctx: TraverseContext[D]): Unit = {
+    override protected def processDominating(ctx: TraverseContext[D], queue: JQueue[KDTree[D]]): Unit = {
       if (ctx.dominates(point, ctx.point)) {
         for (d <- data) ctx.update(d)
       }
