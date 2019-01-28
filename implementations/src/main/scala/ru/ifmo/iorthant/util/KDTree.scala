@@ -9,7 +9,6 @@ abstract class KDTree[D] {
   protected def add(point: Array[Double], data: D, index: Int): KDTree[D]
   def remove(point: Array[Double], data: D): KDTree[D]
   def forDominating(ctx: KDTree.TraverseContext[D]): Unit
-  def forDominatingBounded(ctx: KDTree.TraverseContext[D], usableCoordinates: Array[Boolean]): Unit
   def isEmpty: Boolean
 }
 
@@ -35,7 +34,6 @@ object KDTree {
   class Empty[D] extends KDTree[D] {
     override def add(point: Array[Double], data: D, index: Int): KDTree[D] = new Leaf(point, data)
     override def forDominating(ctx: TraverseContext[D]): Unit = {}
-    override def forDominatingBounded(ctx: KDTree.TraverseContext[D], usableCoordinates: Array[Boolean]): Unit = {}
     override def remove(point: Array[Double], data: D): KDTree[D] = {
       throw new IllegalArgumentException("No point can be in an empty KDTree")
     }
@@ -60,20 +58,6 @@ object KDTree {
       left.forDominating(ctx)
       if (ctx.point(index) > value) {
         right.forDominating(ctx)
-      }
-    }
-
-    override def forDominatingBounded(ctx: KDTree.TraverseContext[D], usableCoordinates: Array[Boolean]): Unit = {
-      if (!usableCoordinates(index)) {
-        left.forDominatingBounded(ctx, usableCoordinates)
-        right.forDominatingBounded(ctx, usableCoordinates)
-      } else if (ctx.point(index) > value) {
-        right.forDominatingBounded(ctx, usableCoordinates)
-        usableCoordinates(index) = false
-        left.forDominatingBounded(ctx, usableCoordinates)
-        usableCoordinates(index) = true
-      } else {
-        left.forDominatingBounded(ctx, usableCoordinates)
       }
     }
 
@@ -115,12 +99,6 @@ object KDTree {
     }
 
     override def forDominating(ctx: TraverseContext[D]): Unit = {
-      if (ctx.dominates(point, ctx.point)) {
-        for (d <- data) ctx.update(d)
-      }
-    }
-
-    override def forDominatingBounded(ctx: TraverseContext[D], usableCoordinates: Array[Boolean]): Unit = {
       if (ctx.dominates(point, ctx.point)) {
         for (d <- data) ctx.update(d)
       }
