@@ -5,8 +5,7 @@ import java.util.concurrent.TimeUnit
 
 import org.openjdk.jmh.annotations._
 import org.openjdk.jmh.infra.Blackhole
-
-import ru.ifmo.iorthant.noq2d.{NoUpdateIncrementalOrthantSearch, PlainArray, SimpleKD}
+import ru.ifmo.iorthant.noq2d.{NoUpdateIncrementalOrthantSearch, PlainArray, SimpleKD, SimpleKDBounded}
 import ru.ifmo.iorthant.util.{HasMinus, LiveDeadSet, Monoid}
 import ru.ifmo.iorthant.util.Syntax._
 
@@ -21,7 +20,7 @@ class NoUpdateBenchmark {
   import NoUpdateBenchmark._
 
   //noinspection VarCouldBeVal: this inspection shall be suppressed for everything @Param
-  @Param(Array("10", "31", "100", "316", "1000", "3162", "10000"))
+  @Param(Array("10", "31", "100", "316", "1000"))
   private var n: Int = _
 
   //noinspection VarCouldBeVal: this inspection shall be suppressed for everything @Param
@@ -29,7 +28,7 @@ class NoUpdateBenchmark {
   private var d: Int = _
 
   //noinspection VarCouldBeVal: this inspection shall be suppressed for everything @Param
-  @Param(Array("plain", "kd-simple"))
+  @Param(Array("plain", "kd-simple", "kd-simple-bounded"))
   private var algorithm: String = _
 
   //noinspection VarCouldBeVal: this inspection shall be suppressed for everything @Param
@@ -94,8 +93,9 @@ class NoUpdateBenchmark {
 object NoUpdateBenchmark {
   class AlgorithmWrapper(algorithmName: String, nDataPoints: Int, nQueryPoints: Int) {
     final val algorithm: NoUpdateIncrementalOrthantSearch[Double] = algorithmName match {
-      case "plain"     => new PlainArray[Double]()(TestMonoid)
-      case "kd-simple" => new SimpleKD[Double](0)(TestMonoid)
+      case "plain"             => new PlainArray[Double]()(TestMonoid)
+      case "kd-simple"         => new SimpleKD[Double](0)(TestMonoid)
+      case "kd-simple-bounded" => new SimpleKDBounded[Double](0)(TestMonoid)
     }
     final val dataPoints = algorithm.newDataPointHandleArray(nDataPoints)
     final val queryPoints = algorithm.newQueryPointHandleArray(nDataPoints)

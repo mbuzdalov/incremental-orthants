@@ -144,4 +144,7 @@ object Tests {
   class SimpleKDTests extends Tests {
     override def makeDataStructure(): NoUpdateIncrementalOrthantSearch[Int] = new SimpleKD[Int](0)
   }
+  class SimpleKDBoundedTests extends Tests {
+    override def makeDataStructure(): NoUpdateIncrementalOrthantSearch[Int] = new SimpleKDBounded[Int](0)
+  }
 }
