@@ -29,7 +29,7 @@ class TrackingDelegate[@specialized(Specialization.defaultSet) T](val impl: NoUp
 
   override def removeQueryPoint(handle: QueryPointHandle): Unit = impl.removeQueryPoint(handle)
 
-  override def valueChanged(value: T, point: Array[Double]): Unit = myEvents += TrackingDelegate.ValueChanged(point, value)
+  override def valueChanged(oldValue: T, newValue: T, point: Array[Double]): Unit = myEvents += TrackingDelegate.ValueChanged(point, newValue)
 
   def expectChange(point: Array[Double], value: T): Unit = {
     val vc = TrackingDelegate.ValueChanged(point, value)

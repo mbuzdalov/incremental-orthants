@@ -73,18 +73,20 @@ object PlainArray {
   ](val point: Array[Double],
     private var value: T,
     private val tracker: NoUpdateIncrementalOrthantSearch.UpdateTracker[T, I],
-    private val identifier: I) extends QueryWrapper[T] {
+    private val identifier: I)(implicit m: Monoid[T]) extends QueryWrapper[T] {
 
-    tracker.valueChanged(value, identifier)
+    tracker.valueChanged(m.zero, value, identifier)
 
     def plus(v: T)(implicit m: Monoid[T]): Unit = {
+      val old = value
       value = m.plus(value, v)
-      tracker.valueChanged(value, identifier)
+      tracker.valueChanged(old, value, identifier)
     }
 
     def minus(v: T)(implicit m: HasMinus[T]): Unit = {
+      val old = value
       value = m.minus(value, v)
-      tracker.valueChanged(value, identifier)
+      tracker.valueChanged(old, value, identifier)
     }
   }
 }

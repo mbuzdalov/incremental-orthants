@@ -101,7 +101,7 @@ object NoUpdateBenchmark {
   }
 
   object IgnoreTracker extends NoUpdateIncrementalOrthantSearch.UpdateTracker[Double, AnyRef] {
-    override def valueChanged(value: Double, identifier: AnyRef): Unit = {}
+    override def valueChanged(oldValue: Double, newValue: Double, identifier: AnyRef): Unit = {}
   }
 
   implicit object TestMonoid extends Monoid[Double] with HasMinus[Double] {

@@ -22,6 +22,6 @@ trait NoUpdateIncrementalOrthantSearch[@specialized(Specialization.defaultSet) T
 
 object NoUpdateIncrementalOrthantSearch {
   trait UpdateTracker[@specialized(Specialization.defaultSet) T, I] {
-    def valueChanged(value: T, identifier: I): Unit
+    def valueChanged(oldValue: T, newValue: T, identifier: I): Unit
   }
 }

@@ -87,8 +87,8 @@ abstract class Tests {
     }
 
     val tracker = new NoUpdateIncrementalOrthantSearch.UpdateTracker[Int, Query] {
-      override def valueChanged(value: Int, identifier: Query): Unit = {
-        identifier.realValue = value
+      override def valueChanged(oldValue: Int, newValue: Int, identifier: Query): Unit = {
+        identifier.realValue = newValue
       }
     }
 
