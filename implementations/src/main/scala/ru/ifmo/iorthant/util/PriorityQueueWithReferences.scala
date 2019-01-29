@@ -1,7 +1,78 @@
 package ru.ifmo.iorthant.util
 
-class PriorityQueueWithReferences[T <: PriorityQueueWithReferences.HasIndex with Comparable[T]](maxSize: Int) {
+import scala.reflect.ClassTag
 
+class PriorityQueueWithReferences[T <: PriorityQueueWithReferences.HasIndex with Comparable[T]](maxSize: Int)
+                                                                                               (implicit tag: ClassTag[T]) {
+  private[this] val arr = new Array[T](maxSize)
+  private[this] var cnt: Int = 0
+
+  def size: Int = cnt
+
+  def add(element: T): Unit = {
+    arr(cnt) = element
+    siftUp(cnt)
+    cnt += 1
+  }
+
+  def removeSmallest(): T = {
+    val rv = arr(0)
+    cnt -= 1
+    arr(0) = arr(cnt)
+    arr(cnt) = _
+    siftDown(0)
+    rv.index = -1
+    rv
+  }
+
+  def updateAfterIncrease(element: T): Unit = siftDown(element.index)
+  def updateAfterDecrease(element: T): Unit = siftUp(element.index)
+
+  private def siftUp(i: Int): Unit = {
+    val ai = arr(i)
+    if (i > 0) {
+      val p = (i - 1) >>> 1
+      val ap = arr(p)
+      if (ap.compareTo(ai) > 0) {
+        arr(i) = ap
+        ap.index = i
+        arr(p) = ai
+        siftUp(p)
+      } else {
+        ai.index = i
+      }
+    } else {
+      ai.index = i
+    }
+  }
+
+  private def siftDown(i: Int): Unit = {
+    val l = (i << 1) + 1
+    val ai = arr(i)
+    if (l < cnt) {
+      val al = arr(l)
+      var b = l
+      var ab = al
+      val r = l + 1
+      if (r < cnt) {
+        val ar = arr(r)
+        if (al.compareTo(ar) > 0) {
+          b = r
+          ab = ar
+        }
+      }
+      if (ai.compareTo(ab) > 0) {
+        arr(i) = ab
+        ab.index = i
+        arr(b) = ai
+        siftDown(b)
+      } else {
+        ai.index = i
+      }
+    } else {
+      ai.index = i
+    }
+  }
 }
 
 object PriorityQueueWithReferences {
