@@ -31,8 +31,8 @@ object KDTree {
     a + (b - a) * ThreadLocalRandom.current().nextDouble()
   }
 
-  class Empty[D] extends KDTree[D] {
-    override def add(point: Array[Double], data: D, index: Int): KDTree[D] = new Leaf(point, data)
+  private class Empty[D] extends KDTree[D] {
+    override def add(point: Array[Double], data: D, index: Int): KDTree[D] = new Leaf(point, data, null)
     override def forDominating(ctx: TraverseContext[D]): Unit = {}
     override def remove(point: Array[Double], data: D): KDTree[D] = {
       throw new IllegalArgumentException("No point can be in an empty KDTree")
@@ -41,9 +41,10 @@ object KDTree {
   }
 
   private val emptyInstance = new Empty[Nothing]
-  def empty[D]: Empty[D] = emptyInstance.asInstanceOf[Empty[D]]
 
-  class Branch[D](val index: Int, val value: Double, var left: KDTree[D], var right: KDTree[D]) extends KDTree[D] {
+  def empty[D]: KDTree[D] = emptyInstance.asInstanceOf[Empty[D]]
+
+  private class Branch[D](val index: Int, val value: Double, var left: KDTree[D], var right: KDTree[D]) extends KDTree[D] {
     override def add(point: Array[Double], data: D, index: Int): KDTree[D] = {
       if (point(this.index) <= value) {
         left = left.add(point, data, (this.index + 1) % point.length)
@@ -74,22 +75,20 @@ object KDTree {
     override def isEmpty: Boolean = false
   }
 
-  class Leaf[D](val point: Array[Double], val data: ArrayBuffer[D]) extends KDTree[D] {
-    def this(point: Array[Double], data: D) {
-      this(point, new ArrayBuffer[D](1))
-      this.data += data
-    }
-
+  private class Leaf[D](val point: Array[Double], var data0: D, var dataMore: ArrayBuffer[D]) extends KDTree[D] {
     override def add(point: Array[Double], data: D, index: Int): KDTree[D] = {
       if (Arrays.equal(this.point, point)) {
-        this.data += data
+        if (dataMore == null) {
+          dataMore = new ArrayBuffer[D](2)
+        }
+        dataMore += data
         this
       } else {
         val idx = chooseDifferentCoordinate(point, this.point, index)
         val thisV = this.point(idx)
         val thatV = point(idx)
         val sep = createSeparator(thisV, thatV)
-        val that = new Leaf(point, data)
+        val that = new Leaf(point, data, null)
         if (thisV < thatV) {
           new Branch(idx, sep, this, that)
         } else {
@@ -100,14 +99,34 @@ object KDTree {
 
     override def forDominating(ctx: TraverseContext[D]): Unit = {
       if (ctx.dominates(point, ctx.point)) {
-        for (d <- data) ctx.update(d)
+        ctx.update(data0)
+        if (dataMore != null) {
+          for (d <- dataMore) ctx.update(d)
+        }
       }
     }
 
     override def remove(point: Array[Double], data: D): KDTree[D] = {
-      val idx = this.data.indexOf(data)
-      this.data.remove(idx)
-      if (this.data.isEmpty) empty else this
+      if (data0 == data) {
+        if (dataMore == null) {
+          empty
+        } else {
+          val lastIndex = dataMore.size - 1
+          data0 = dataMore(lastIndex)
+          dataMore.remove(lastIndex)
+          if (dataMore.isEmpty) {
+            dataMore = null
+          }
+          this
+        }
+      } else {
+        val idx = dataMore.indexOf(data)
+        dataMore.remove(idx)
+        if (dataMore.isEmpty) {
+          dataMore = null
+        }
+        this
+      }
     }
 
     override def isEmpty: Boolean = false
