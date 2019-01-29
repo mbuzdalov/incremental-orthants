@@ -24,7 +24,7 @@ class NoUpdateBenchmark {
   private var n: Int = _
 
   //noinspection VarCouldBeVal: this inspection shall be suppressed for everything @Param
-  @Param(Array("2", "3", "4", "5"))
+  @Param(Array("2", "3", "5", "7", "10"))
   private var d: Int = _
 
   //noinspection VarCouldBeVal: this inspection shall be suppressed for everything @Param
