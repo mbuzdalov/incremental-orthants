@@ -12,6 +12,6 @@ object Dominance {
     lhs(i) <= rhs(i) && (i == iMin || nonStrictImpl(lhs, rhs, i - 1, iMin))
   }
   private[this] def strictImpl(lhs: Array[Double], rhs: Array[Double], i: Int, iMin: Int): Boolean = {
-    lhs(i) <= rhs(i) && (i == iMin || strictImpl(lhs, rhs, i - 1, iMin))
+    lhs(i) < rhs(i) && (i == iMin || strictImpl(lhs, rhs, i - 1, iMin))
   }
 }
