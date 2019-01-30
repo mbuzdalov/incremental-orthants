@@ -18,7 +18,7 @@ class TrackingDelegate[@specialized(Specialization.defaultSet) T](val impl: NoUp
 
   def addQueryPoint(point: Array[Double]): QueryPointHandle = impl.addQueryPoint(point, this, point)
 
-  override def addQueryPoint[I](point: Array[Double],
+  override def addQueryPoint[@specialized(Specialization.defaultSet) I](point: Array[Double],
                                 tracker: NoUpdateIncrementalOrthantSearch.UpdateTracker[T, I],
                                 identifier: I): QueryPointHandle = addQueryPoint(point)
 

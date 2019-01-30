@@ -27,7 +27,7 @@ class PlainArray[@specialized(Specialization.defaultSet) T](implicit m: Monoid[T
     new DataWrapper[T](point, value).addTo(dataPoints)
   }
 
-  override def addQueryPoint[I](point: Array[Double],
+  override def addQueryPoint[@specialized(Specialization.defaultSet) I](point: Array[Double],
                                 tracker: NoUpdateIncrementalOrthantSearch.UpdateTracker[T, I],
                                 identifier: I): QueryPointHandle = {
     new QueryWrapperImpl[T, I](point, makeQuery(point), tracker, identifier).addTo(queryPoints)

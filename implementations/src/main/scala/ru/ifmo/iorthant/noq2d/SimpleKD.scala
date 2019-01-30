@@ -21,7 +21,7 @@ class SimpleKD[@specialized(Specialization.defaultSet) T](minNonStrictCoordinate
     handle
   }
 
-  override def addQueryPoint[I](point: Array[Double],
+  override def addQueryPoint[@specialized(Specialization.defaultSet) I](point: Array[Double],
                                 tracker: NoUpdateIncrementalOrthantSearch.UpdateTracker[T, I],
                                 identifier: I): QueryPointHandle = {
     val value = makeQuery(point)

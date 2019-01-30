@@ -10,7 +10,7 @@ trait NoUpdateIncrementalOrthantSearch[@specialized(Specialization.defaultSet) T
   def newQueryPointHandleArray(n: Int): Array[QueryPointHandle]
 
   def addDataPoint(point: Array[Double], value: T): DataPointHandle
-  def addQueryPoint[I](point: Array[Double],
+  def addQueryPoint[@specialized(Specialization.defaultSet) I](point: Array[Double],
                        tracker: NoUpdateIncrementalOrthantSearch.UpdateTracker[T, I],
                        identifier: I): QueryPointHandle
 
@@ -21,7 +21,7 @@ trait NoUpdateIncrementalOrthantSearch[@specialized(Specialization.defaultSet) T
 }
 
 object NoUpdateIncrementalOrthantSearch {
-  trait UpdateTracker[@specialized(Specialization.defaultSet) T, I] {
+  trait UpdateTracker[@specialized(Specialization.defaultSet) T, @specialized(Specialization.defaultSet) I] {
     def valueChanged(oldValue: T, newValue: T, identifier: I): Unit
   }
 }
