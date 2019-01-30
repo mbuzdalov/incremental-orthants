@@ -15,6 +15,14 @@ class PriorityQueueWithReferences[T <: PriorityQueueWithReferences.HasIndex with
     cnt += 1
   }
 
+  def foreach(fun: T => Unit): Unit = {
+    var i = 0
+    while (i < cnt) {
+      fun(arr(i))
+      i += 1
+    }
+  }
+
   def foreachWithIndex(fun: (T, Int) => Unit): Unit = {
     var i = 0
     while (i < cnt) {

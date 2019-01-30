@@ -14,6 +14,8 @@ class OrthantImplementation[T](kappa: Double, maxIndividuals: Int, dimension: In
   private[this] final val queue = new PriorityQueueWithReferences[IndividualHolder[T]](maxIndividuals)
   private[this] final val hash0 = new mutable.HashMap[RemovalHolder[T], ArrayBuffer[IndividualHolder[T]]]()
 
+  override def size: Int = queue.size
+
   override def addIndividual(genotype: T, fitness: Array[Double]): Unit = {
     val removalHolders = new Array[RemovalHolder[T]](dimension)
     val multipliers = new Array[Double](dimension)
@@ -37,6 +39,7 @@ class OrthantImplementation[T](kappa: Double, maxIndividuals: Int, dimension: In
     }
   }
   override def fillPopulation(target: Array[T]): Unit = queue.foreachWithIndex((h, i) => target(i) = h.genotype)
+  override def iterateOverPotentials(fun: (T, Double) => Unit): Unit = queue.foreach(h => fun(h.genotype, h.fitness))
 }
 
 object OrthantImplementation {

@@ -10,6 +10,8 @@ class NaiveImplementation[T : ClassTag](kappa: Double, maxIndividuals: Int) exte
   private[this] val potentials = new Array[Double](maxIndividuals)
   private[this] var count = 0
 
+  override def size: Int = count
+
   override def addIndividual(genotype: T, fitness: Array[Double]): Unit = {
     individuals(count) = genotype
     objectives(count) = fitness
@@ -41,6 +43,14 @@ class NaiveImplementation[T : ClassTag](kappa: Double, maxIndividuals: Int) exte
 
   override def fillPopulation(target: Array[T]): Unit = {
     System.arraycopy(individuals, 0, target, 0, count)
+  }
+
+  override def iterateOverPotentials(fun: (T, Double) => Unit): Unit = {
+    var i = 0
+    while (i < count) {
+      fun(individuals(i), potentials(i))
+      i += 1
+    }
   }
 
   private def indicator(lhs: Array[Double], rhs: Array[Double], length: Int): Double = {
