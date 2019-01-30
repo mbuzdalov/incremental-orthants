@@ -33,8 +33,8 @@ class PriorityQueueWithReferences[T <: PriorityQueueWithReferences.HasIndex with
     rv
   }
 
-  def updateAfterIncrease(element: T): Unit = siftDown(element.index)
-  def updateAfterDecrease(element: T): Unit = siftUp(element.index)
+  def updateAfterIncrease(element: T): Unit = if (element.index >= 0) siftDown(element.index)
+  def updateAfterDecrease(element: T): Unit = if (element.index >= 0) siftUp(element.index)
 
   private def siftUp(i: Int): Unit = {
     val ai = arr(i)
