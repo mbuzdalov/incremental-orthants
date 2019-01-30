@@ -27,7 +27,7 @@ class PriorityQueueWithReferences[T <: PriorityQueueWithReferences.HasIndex with
     val rv = arr(0)
     cnt -= 1
     arr(0) = arr(cnt)
-    arr(cnt) = _
+    arr(cnt) = null.asInstanceOf[T]
     siftDown(0)
     rv.index = -1
     rv

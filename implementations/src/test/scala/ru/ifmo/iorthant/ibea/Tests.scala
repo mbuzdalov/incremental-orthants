@@ -7,11 +7,11 @@ import org.junit.{Assert, Test}
 abstract class Tests {
   private final val defaultKappa = 0.05
 
-  def makeAlgorithm[T : ClassTag](kappa: Double, maxSize: Int): EpsilonIBEAFitness[T]
+  def makeAlgorithm[T : ClassTag](kappa: Double, maxSize: Int, dimension: Int): EpsilonIBEAFitness[T]
 
   @Test
   def testTwoDominatingPoints(): Unit = {
-    val a = makeAlgorithm[String](defaultKappa, 2)
+    val a = makeAlgorithm[String](defaultKappa, 2, 2)
     val place = new Array[String](1)
     a.addIndividual("i0", Array(1, 1))
     a.addIndividual("i1", Array(2, 2))
@@ -22,7 +22,7 @@ abstract class Tests {
 
   @Test
   def testTwoNonDominatingPoints(): Unit = {
-    val a = makeAlgorithm[String](defaultKappa, 2)
+    val a = makeAlgorithm[String](defaultKappa, 2, 2)
     val place = new Array[String](1)
     a.addIndividual("i0", Array(0, 2))
     a.addIndividual("i1", Array(1, 0))
@@ -33,7 +33,7 @@ abstract class Tests {
 
   @Test
   def testThreeNonDominatingPoints(): Unit = {
-    val a = makeAlgorithm[String](defaultKappa, 3)
+    val a = makeAlgorithm[String](defaultKappa, 3, 2)
     val place = new Array[String](2)
     a.addIndividual("i0", Array(0, 2))
     a.addIndividual("i1", Array(1, 1))
@@ -48,7 +48,7 @@ abstract class Tests {
 
   @Test
   def testEqualPoints(): Unit = {
-    val a = makeAlgorithm[String](defaultKappa, 9)
+    val a = makeAlgorithm[String](defaultKappa, 9, 3)
     val place = new Array[String](6)
     a.addIndividual("i0", Array(1, 0, 0))
     a.addIndividual("i0", Array(1, 0, 0))
@@ -74,8 +74,13 @@ abstract class Tests {
 
 object Tests {
   class NaiveImplementationTests extends Tests {
-    override def makeAlgorithm[T : ClassTag](kappa: Double, maxSize: Int): EpsilonIBEAFitness[T] = {
+    override def makeAlgorithm[T : ClassTag](kappa: Double, maxSize: Int, dimension: Int): EpsilonIBEAFitness[T] = {
       new NaiveImplementation[T](kappa, maxSize)
+    }
+  }
+  class OrthantImplementationTests extends Tests {
+    override def makeAlgorithm[T : ClassTag](kappa: Double, maxSize: Int, dimension: Int): EpsilonIBEAFitness[T] = {
+      new OrthantImplementation[T](kappa, maxSize, dimension)
     }
   }
 }
