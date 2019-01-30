@@ -4,7 +4,8 @@ object Dominance {
   def nonStrict(lhs: Array[Double], rhs: Array[Double]): Boolean = nonStrictImpl(lhs, rhs, lhs.length - 1, 0)
   def strict(lhs: Array[Double], rhs: Array[Double]): Boolean = nonStrict(lhs, rhs) && !Arrays.equal(lhs, rhs)
   def partial(lhs: Array[Double], rhs: Array[Double], minNonStrict: Int): Boolean = {
-    nonStrictImpl(lhs, rhs, lhs.length - 1, minNonStrict) &&
+    val maxIndex = lhs.length - 1
+    (maxIndex < minNonStrict || nonStrictImpl(lhs, rhs, maxIndex, minNonStrict)) &&
       (if (minNonStrict == 0) !Arrays.equal(lhs, rhs) else strictImpl(lhs, rhs, minNonStrict - 1, 0))
   }
 
