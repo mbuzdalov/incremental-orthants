@@ -32,7 +32,7 @@ object KDTree {
   }
 
   private class Empty[D] extends KDTree[D] {
-    override def add(point: Array[Double], data: D, index: Int): KDTree[D] = new Leaf(point, data, null)
+    override def add(point: Array[Double], data: D, index: Int): KDTree[D] = new Leaf(point, data)
     override def forDominating(ctx: TraverseContext[D]): Unit = {}
     override def remove(point: Array[Double], data: D): KDTree[D] = {
       throw new IllegalArgumentException("No point can be in an empty KDTree")
@@ -44,8 +44,11 @@ object KDTree {
 
   def empty[D]: KDTree[D] = emptyInstance.asInstanceOf[Empty[D]]
 
-  private class Branch[D](val index: Int, val value: Double, var left: KDTree[D], var right: KDTree[D]) extends KDTree[D] {
-    override def add(point: Array[Double], data: D, index: Int): KDTree[D] = {
+  private class Branch[D](index: Int,
+                          value: Double,
+                          private[this] var left: KDTree[D],
+                          private[this] var right: KDTree[D]) extends KDTree[D] {
+    override protected def add(point: Array[Double], data: D, index: Int): KDTree[D] = {
       if (point(this.index) <= value) {
         left = left.add(point, data, (this.index + 1) % point.length)
         this
@@ -75,8 +78,9 @@ object KDTree {
     override def isEmpty: Boolean = false
   }
 
-  private class Leaf[D](val point: Array[Double], var data0: D, var dataMore: ArrayBuffer[D]) extends KDTree[D] {
-    override def add(point: Array[Double], data: D, index: Int): KDTree[D] = {
+  private class Leaf[D](point: Array[Double], private[this] var data0: D) extends KDTree[D] {
+    private[this] var dataMore: ArrayBuffer[D] = _
+    override protected def add(point: Array[Double], data: D, index: Int): KDTree[D] = {
       if (Arrays.equal(this.point, point)) {
         if (dataMore == null) {
           dataMore = new ArrayBuffer[D](2)
@@ -88,7 +92,7 @@ object KDTree {
         val thisV = this.point(idx)
         val thatV = point(idx)
         val sep = createSeparator(thisV, thatV)
-        val that = new Leaf(point, data, null)
+        val that = new Leaf(point, data)
         if (thisV < thatV) {
           new Branch(idx, sep, this, that)
         } else {
