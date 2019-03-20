@@ -1,5 +1,6 @@
 package ru.ifmo.iorthant.util
 
+import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
 class PriorityQueueWithReferences[T <: PriorityQueueWithReferences.HasIndex with Comparable[T]](maxSize: Int)
@@ -34,9 +35,11 @@ class PriorityQueueWithReferences[T <: PriorityQueueWithReferences.HasIndex with
   def removeSmallest(): T = {
     val rv = arr(0)
     cnt -= 1
-    arr(0) = arr(cnt)
-    arr(cnt) = null.asInstanceOf[T]
-    siftDown(0)
+    if (cnt > 0) {
+      arr(0) = arr(cnt)
+      arr(cnt) = null.asInstanceOf[T]
+      siftDown(0)
+    }
     rv.index = -1
     rv
   }
@@ -44,6 +47,7 @@ class PriorityQueueWithReferences[T <: PriorityQueueWithReferences.HasIndex with
   def updateAfterIncrease(element: T): Unit = if (element.index >= 0) siftDown(element.index)
   def updateAfterDecrease(element: T): Unit = if (element.index >= 0) siftUp(element.index)
 
+  @tailrec
   private def siftUp(i: Int): Unit = {
     val ai = arr(i)
     if (i > 0) {
@@ -62,6 +66,7 @@ class PriorityQueueWithReferences[T <: PriorityQueueWithReferences.HasIndex with
     }
   }
 
+  @tailrec
   private def siftDown(i: Int): Unit = {
     val l = (i << 1) + 1
     val ai = arr(i)
