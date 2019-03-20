@@ -2,22 +2,57 @@ package ru.ifmo.iorthant.ibea
 
 import java.util.Random
 
-import org.junit.{Assert, Test}
+import org.junit.{Assert, Ignore, Test}
 
 import scala.collection.mutable
 
 class SmokeTest {
-  private def assertEquals(a: Double, b: Double, iteration: Int): Unit = {
+  private def differ(a: Double, b: Double): Boolean = {
     val scale = math.max(1, math.max(math.abs(a), math.abs(b)))
-    if (math.abs(a - b) > scale * 1e-12) {
+    math.abs(a - b) > scale * 1e-12
+  }
+
+  private def assertEquals(a: Double, b: Double, iteration: Int): Unit = {
+    if (differ(a, b)) {
       throw new AssertionError("Iteration " + iteration + ": Expected " + a + " found " + b)
     }
   }
 
+  private def validate(iteration: Int, tuples: IndexedSeq[(Double, Int)], index: Int, last: Double, lastCount: Int): Unit = {
+    if (index == tuples.size || differ(last, tuples(index)._1) && lastCount != 0) {
+      if (lastCount != 0) {
+        throw new AssertionError("Iteration " + iteration + s": Unbalanced non-common keys found: for value $last the balance is $lastCount")
+      }
+    } else {
+      val (value, count) = tuples(index)
+      if (differ(last, value)) {
+        assert(lastCount == 0)
+        validate(iteration, tuples, index + 1, value, count)
+      } else {
+        validate(iteration, tuples, index + 1, value, lastCount + count)
+      }
+    }
+  }
+
   private def compare(a: EpsilonIBEAFitness[String], b: EpsilonIBEAFitness[String], iteration: Int): Unit = {
-    val hash = new mutable.HashMap[String, Double]()
-    a.iterateOverPotentials((g, f) => hash += g -> f)
-    b.iterateOverPotentials((g, f) => assertEquals(hash(g), f, iteration))
+    val keysOfA, keysOfB = new mutable.HashSet[String]
+    a.iterateOverPotentials((g, _) => keysOfA += g)
+    b.iterateOverPotentials((g, _) => keysOfB += g)
+    val commonKeys = keysOfA.intersect(keysOfB).filter(_ => false)
+    val commonHash = new mutable.HashMap[String, Double]()
+    val nonCommonMultiSet = new mutable.HashMap[Double, Int]()
+    a.iterateOverPotentials((g, f) => if (commonKeys.contains(g)) commonHash.update(g, f) else nonCommonMultiSet.update(f, nonCommonMultiSet.getOrElse(f, 0) + 1))
+    b.iterateOverPotentials((g, f) => if (commonKeys.contains(g)) assertEquals(commonHash(g), f, iteration) else nonCommonMultiSet.update(f, nonCommonMultiSet.getOrElse(f, 0) - 1))
+    val nonCommonNonZero = nonCommonMultiSet.filter(_._2 != 0)
+    if (nonCommonNonZero.nonEmpty) {
+      if (nonCommonNonZero.size == 1) {
+        // definitely wrong
+        throw new AssertionError("Iteration " + iteration + ": Unbalanced non-common keys found: " + nonCommonNonZero)
+      } else {
+        val sorted = nonCommonNonZero.toIndexedSeq.sortBy(_._1)
+        validate(iteration, sorted, 0, Double.NaN, 0)
+      }
+    }
   }
 
   @Test
@@ -42,6 +77,10 @@ class SmokeTest {
     }
   }
 
+//  @Ignore(
+//    "Depending on which exactly individual we remove among the equal ones, " +
+//    "the rest of the operation sequence can be different. " +
+//    "No idea how to check whether a particular sequence is allowable.")
   @Test
   def smokeInt(): Unit = {
     val dim = 2
