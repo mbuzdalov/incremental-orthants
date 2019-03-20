@@ -41,4 +41,26 @@ class SmokeTest {
       }
     }
   }
+
+  @Test
+  def smokeInt(): Unit = {
+    val dim = 2
+    val naive = new NaiveImplementation[String](0.05, 100)
+    val orthant = new OrthantImplementation[String](0.05, 100, dim)
+    val rng = new Random(667345823536361L)
+    for (z <- 0 to 10000) {
+      Assert.assertEquals(naive.size, orthant.size)
+      compare(naive, orthant, z)
+      if (naive.size == 100 || naive.size > 90 && rng.nextBoolean()) {
+        val newSize = 1 + rng.nextInt(75)
+        naive.trimPopulation(newSize)
+        orthant.trimPopulation(newSize)
+      } else {
+        val newItem = Array.fill(dim)(rng.nextInt(5).toDouble)
+        val newGenotype = z.toString
+        naive.addIndividual(newGenotype, newItem)
+        orthant.addIndividual(newGenotype, newItem)
+      }
+    }
+  }
 }
