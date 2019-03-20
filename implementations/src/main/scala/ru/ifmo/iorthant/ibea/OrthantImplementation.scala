@@ -12,7 +12,7 @@ class OrthantImplementation[T](kappa: Double, maxIndividuals: Int, dimension: In
   private[this] implicit final val m: DefaultDoubleMonoid = defaultDoubleMonoid
   private[this] final val trees = Array.tabulate(dimension)(i => new SimpleKD[Double](i))
   private[this] final val queue = new PriorityQueueWithReferences[IndividualHolder[T]](maxIndividuals)
-  private[this] final val hash0 = new mutable.HashMap[RemovalHolder[T], ArrayBuffer[IndividualHolder[T]]]()
+  private[this] final val hash0 = new HasherType[T]()
 
   override def size: Int = queue.size
 
@@ -43,6 +43,8 @@ class OrthantImplementation[T](kappa: Double, maxIndividuals: Int, dimension: In
 }
 
 object OrthantImplementation {
+  private type HasherType[T] = mutable.HashMap[RemovalHolder[T], ArrayBuffer[IndividualHolder[T]]]
+
   private def projectPoint(src: Array[Double], index: Int): Array[Double] = {
     val len = src.length
     val ref = src(index)
@@ -62,7 +64,7 @@ object OrthantImplementation {
 
   private class RemovalHolder[T](tree: SimpleKD[Double], private val point: Array[Double],
                                  index: Int, private val value: Double, holder: IndividualHolder[T],
-                                 hash0: mutable.HashMap[RemovalHolder[T], ArrayBuffer[IndividualHolder[T]]])
+                                 hash0: HasherType[T])
                                 (implicit m: Monoid[Double]) {
     private val queryPoint = tree.addQueryPoint(point, holder, index)
     private val dataPoint = tree.addDataPoint(point, value)
