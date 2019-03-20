@@ -6,8 +6,7 @@ import java.util.concurrent.TimeUnit
 import org.openjdk.jmh.annotations._
 import org.openjdk.jmh.infra.Blackhole
 import ru.ifmo.iorthant.noq2d.{NoUpdateIncrementalOrthantSearch, PlainArray, SimpleKD}
-import ru.ifmo.iorthant.util.{HasMinus, LiveDeadSet, Monoid}
-import ru.ifmo.iorthant.util.Syntax._
+import ru.ifmo.iorthant.util.{DataGenerator, HasMinus, LiveDeadSet, Monoid}
 
 @State(Scope.Benchmark)
 @BenchmarkMode(Array(Mode.AverageTime))
@@ -37,16 +36,6 @@ class NoUpdateBenchmark {
 
   private var instances: Array[Array[Action]] = _
 
-  private def generatePoint(rng: Random): Array[Double] = test match {
-    case "cube" =>
-      Array.fill(d)(rng.nextDouble())
-    case "line" =>
-      val v = rng.nextDouble()
-      Array.fill(d)(v)
-    case "plane" =>
-      Array.fill(d)(rng.nextDouble()).whereAlso(a => a(0) += 1.0 - a.sum)
-  }
-
   @Setup
   def initialize(): Unit = instances = Array.tabulate(10) { i =>
     // intentionally do not depend on "algorithm"
@@ -54,11 +43,12 @@ class NoUpdateBenchmark {
     val queryIndices, dataIndices = new LiveDeadSet(n)
     val actions = Array.newBuilder[Action]
     var wasQueryFull, wasDataFull = false
+    val generator = DataGenerator.lookup(test)
     for (_ <- 0 until 10 * n) {
       if (rng.nextBoolean()) {
         if (rng.nextDouble() < (1 - math.pow(2, queryIndices.nLive - n)) / (1 - math.pow(2, -n))) {
           // add a query
-          actions += new AddQuery(generatePoint(rng), queryIndices.reviveRandom(rng))
+          actions += new AddQuery(generator.generate(rng, d), queryIndices.reviveRandom(rng))
         } else {
           // delete a query
           actions += new RemoveQuery(queryIndices.killRandom(rng))
@@ -66,7 +56,7 @@ class NoUpdateBenchmark {
       } else {
         if (rng.nextDouble() < (1 - math.pow(2, dataIndices.nLive - n)) / (1 - math.pow(2, -n))) {
           // add a query
-          actions += new AddData(generatePoint(rng), rng.nextDouble(), dataIndices.reviveRandom(rng))
+          actions += new AddData(generator.generate(rng, d), rng.nextDouble(), dataIndices.reviveRandom(rng))
         } else {
           // delete a query
           actions += new RemoveData(dataIndices.killRandom(rng))

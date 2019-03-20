@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit
 import org.openjdk.jmh.annotations._
 import org.openjdk.jmh.infra.Blackhole
 import ru.ifmo.iorthant.ibea.{NaiveImplementation, OrthantImplementation}
-import ru.ifmo.iorthant.util.Syntax._
+import ru.ifmo.iorthant.util.DataGenerator
 
 @State(Scope.Benchmark)
 @BenchmarkMode(Array(Mode.AverageTime))
@@ -35,25 +35,12 @@ class IBEAFitnessRandomBenchmark {
 
   private var instances: Array[Array[Array[Double]]] = _
 
-  private def generatePoint(rng: Random): Array[Double] = test match {
-    case "cube" =>
-      Array.fill(d)(rng.nextDouble())
-    case "line" =>
-      val v = rng.nextDouble()
-      Array.fill(d)(v)
-    case "plane" =>
-      Array.fill(d)(rng.nextDouble()).whereAlso(a => a(0) += 1.0 - a.sum)
-  }
-
   @Setup
   def initialize(): Unit = instances = Array.tabulate(10) { i =>
     // intentionally do not depend on "algorithm"
     val rng = new Random(i * 72433566236111L + n * 623432 + d * 91274635553235L + test.hashCode)
-    val actions = Array.newBuilder[Array[Double]]
-    for (_ <- 0 until 10 * n) {
-      actions += generatePoint(rng)
-    }
-    actions.result()
+    val generator = DataGenerator.lookup(test)
+    Array.fill(10 * n)(generator.generate(rng, d))
   }
 
   @Benchmark
