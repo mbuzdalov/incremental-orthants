@@ -56,8 +56,8 @@ object SimpleKD {
     override def update(data: DataWrapper[T]): Unit = {
       v = m.plus(v, data.value)
     }
-    override def dominates(lhs: Array[Double], rhs: Array[Double]): Boolean = {
-      Dominance.partial(lhs, rhs, minNonStrictCoordinate)
+    override def isDominatedBy(point: Array[Double]): Boolean = {
+      Dominance.partial(point, this.point, minNonStrictCoordinate)
     }
   }
 
@@ -67,8 +67,8 @@ object SimpleKD {
     override def update(data: QueryWrapper[T]): Unit = {
       data.plus(value)
     }
-    override def dominates(lhs: Array[Double], rhs: Array[Double]): Boolean = {
-      Dominance.partial(lhs, rhs, minNonStrictCoordinate)
+    override def isDominatedBy(point: Array[Double]): Boolean = {
+      Dominance.partial(point, this.point, minNonStrictCoordinate)
     }
   }
 
@@ -78,8 +78,8 @@ object SimpleKD {
     override def update(data: QueryWrapper[T]): Unit = {
       data.minus(value)
     }
-    override def dominates(lhs: Array[Double], rhs: Array[Double]): Boolean = {
-      Dominance.partial(lhs, rhs, minNonStrictCoordinate)
+    override def isDominatedBy(point: Array[Double]): Boolean = {
+      Dominance.partial(point, this.point, minNonStrictCoordinate)
     }
   }
 }

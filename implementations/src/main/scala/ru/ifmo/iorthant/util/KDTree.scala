@@ -15,7 +15,7 @@ abstract class KDTree[D] {
 object KDTree {
   trait TraverseContext[-D] {
     def point: Array[Double]
-    def dominates(lhs: Array[Double], rhs: Array[Double]): Boolean
+    def isDominatedBy(point: Array[Double]): Boolean
     def update(data: D): Unit
   }
 
@@ -102,7 +102,7 @@ object KDTree {
     }
 
     override def forDominating(ctx: TraverseContext[D]): Unit = {
-      if (ctx.dominates(point, ctx.point)) {
+      if (ctx.isDominatedBy(point)) {
         ctx.update(data0)
         if (dataMore != null) {
           for (d <- dataMore) ctx.update(d)
