@@ -2,7 +2,7 @@ package ru.ifmo.iorthant.ibea
 
 import java.util.Random
 
-import org.junit.{Assert, Ignore, Test}
+import org.junit.{Assert, Test}
 
 import scala.collection.mutable
 
@@ -45,13 +45,8 @@ class SmokeTest {
     b.iterateOverPotentials((g, f) => if (commonKeys.contains(g)) assertEquals(commonHash(g), f, iteration) else nonCommonMultiSet.update(f, nonCommonMultiSet.getOrElse(f, 0) - 1))
     val nonCommonNonZero = nonCommonMultiSet.filter(_._2 != 0)
     if (nonCommonNonZero.nonEmpty) {
-      if (nonCommonNonZero.size == 1) {
-        // definitely wrong
-        throw new AssertionError("Iteration " + iteration + ": Unbalanced non-common keys found: " + nonCommonNonZero)
-      } else {
-        val sorted = nonCommonNonZero.toIndexedSeq.sortBy(_._1)
-        validate(iteration, sorted, 0, Double.NaN, 0)
-      }
+      val sorted = nonCommonNonZero.toIndexedSeq.sortBy(_._1)
+      validate(iteration, sorted, 0, Double.NaN, 0)
     }
   }
 
@@ -77,10 +72,6 @@ class SmokeTest {
     }
   }
 
-//  @Ignore(
-//    "Depending on which exactly individual we remove among the equal ones, " +
-//    "the rest of the operation sequence can be different. " +
-//    "No idea how to check whether a particular sequence is allowable.")
   @Test
   def smokeInt(): Unit = {
     val dim = 2

@@ -1,7 +1,7 @@
 package ru.ifmo.iorthant.ibea
 
 import ru.ifmo.iorthant.noq2d.{NoUpdateIncrementalOrthantSearch, SimpleKD}
-import ru.ifmo.iorthant.util.{HasMinus, Monoid, PriorityQueueWithReferences}
+import ru.ifmo.iorthant.util.{HasNegation, Monoid, PriorityQueueWithReferences}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -79,7 +79,7 @@ object OrthantImplementation {
       buf += holder
     }
 
-    def removeMe(implicit m: HasMinus[Double]): Unit = {
+    def removeMe(implicit m: HasNegation[Double]): Unit = {
       tree.removeDataPoint(dataPoint)
       tree.removeQueryPoint(queryPoint)
       if (index == 0) {
@@ -103,10 +103,10 @@ object OrthantImplementation {
     }
   }
 
-  private class DefaultDoubleMonoid extends Monoid[Double] with HasMinus[Double] {
+  private class DefaultDoubleMonoid extends Monoid[Double] with HasNegation[Double] {
     override def zero: Double = 0
     override def plus(lhs: Double, rhs: Double): Double = lhs + rhs
-    override def minus(lhs: Double, rhs: Double): Double = lhs - rhs
+    override def negate(arg: Double): Double = -arg
   }
   private val defaultDoubleMonoid = new DefaultDoubleMonoid
 
@@ -121,10 +121,9 @@ object OrthantImplementation {
     var fitness: Double = 0.0
     override def compare(that: IndividualHolder[T]): Int = java.lang.Double.compare(fitness, that.fitness)
 
-    override def valueChanged(oldValue: Double, newValue: Double, identifier: Int): Unit = {
-      val prevFitness = fitness
-      fitness -= (newValue - oldValue) * multipliers(identifier)
-      if (prevFitness < fitness) {
+    override def valueChanged(delta: Double, identifier: Int): Unit = {
+      fitness -= delta * multipliers(identifier)
+      if (delta < 0) {
         queue.updateAfterIncrease(this)
       } else {
         queue.updateAfterDecrease(this)

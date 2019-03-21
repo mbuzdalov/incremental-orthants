@@ -37,7 +37,7 @@ class SimpleKD[@specialized(Specialization.defaultSet) T](minNonStrictCoordinate
   }
 
   override def removeDataPoint(handle: DataPointHandle)
-                              (implicit hm: HasMinus[T]): Unit = {
+                              (implicit hm: HasNegation[T]): Unit = {
     dataPoints = dataPoints.remove(handle.point, handle)
     queryPoints.forDominating(new SimpleKD.RemoveContext[T](Arrays.negate(handle.point), handle.value, minNonStrictCoordinate))
   }
@@ -73,7 +73,7 @@ object SimpleKD {
   }
 
   class RemoveContext[@specialized(Specialization.defaultSet) T](val point: Array[Double], val value: T, minNonStrictCoordinate: Int)
-                                                                (implicit m: HasMinus[T])
+                                                                (implicit m: HasNegation[T])
     extends KDTree.TraverseContext[QueryWrapper[T]] {
     override def update(data: QueryWrapper[T]): Unit = {
       data.minus(value)

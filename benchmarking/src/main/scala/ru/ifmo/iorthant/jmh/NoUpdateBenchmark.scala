@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit
 import org.openjdk.jmh.annotations._
 import org.openjdk.jmh.infra.Blackhole
 import ru.ifmo.iorthant.noq2d.{NoUpdateIncrementalOrthantSearch, PlainArray, SimpleKD}
-import ru.ifmo.iorthant.util.{DataGenerator, HasMinus, LiveDeadSet, Monoid}
+import ru.ifmo.iorthant.util.{DataGenerator, HasNegation, LiveDeadSet, Monoid}
 
 @State(Scope.Benchmark)
 @BenchmarkMode(Array(Mode.AverageTime))
@@ -91,13 +91,13 @@ object NoUpdateBenchmark {
   }
 
   object IgnoreTracker extends NoUpdateIncrementalOrthantSearch.UpdateTracker[Double, AnyRef] {
-    override def valueChanged(oldValue: Double, newValue: Double, identifier: AnyRef): Unit = {}
+    override def valueChanged(delta: Double, identifier: AnyRef): Unit = {}
   }
 
-  implicit object TestMonoid extends Monoid[Double] with HasMinus[Double] {
+  implicit object TestMonoid extends Monoid[Double] with HasNegation[Double] {
     override def zero: Double = 0
     override def plus(lhs: Double, rhs: Double): Double = lhs + rhs
-    override def minus(lhs: Double, rhs: Double): Double = lhs - rhs
+    override def negate(arg: Double): Double = -arg
   }
 
   abstract class Action {

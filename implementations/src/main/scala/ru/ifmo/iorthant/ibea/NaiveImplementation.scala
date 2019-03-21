@@ -16,7 +16,7 @@ class NaiveImplementation[T : ClassTag](kappa: Double, maxIndividuals: Int) exte
     individuals(count) = genotype
     objectives(count) = fitness
     potentials(count) = collectIndicatorSum(fitness, count)
-    updateIndicators(fitness, count, 1.0)
+    subtractFromPotentials(fitness, count)
     count += 1
   }
 
@@ -37,7 +37,7 @@ class NaiveImplementation[T : ClassTag](kappa: Double, maxIndividuals: Int) exte
       Arrays.swap(individuals, worst, count)
       Arrays.swap(objectives, worst, count)
       Arrays.swap(potentials, worst, count)
-      updateIndicators(objectives(count), count, -1.0)
+      addToPotentials(objectives(count), count)
     }
   }
 
@@ -74,11 +74,20 @@ class NaiveImplementation[T : ClassTag](kappa: Double, maxIndividuals: Int) exte
     sum
   }
 
-  private def updateIndicators(fitness: Array[Double], index: Int, weight: Double): Unit = {
+  private def subtractFromPotentials(fitness: Array[Double], index: Int): Unit = {
     val len = fitness.length
     var i = index - 1
     while (i >= 0) {
-      potentials(i) -= indicator(fitness, objectives(i), len) * weight
+      potentials(i) -= indicator(fitness, objectives(i), len)
+      i -= 1
+    }
+  }
+
+  private def addToPotentials(fitness: Array[Double], index: Int): Unit = {
+    val len = fitness.length
+    var i = index - 1
+    while (i >= 0) {
+      potentials(i) += indicator(fitness, objectives(i), len)
       i -= 1
     }
   }

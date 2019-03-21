@@ -3,7 +3,7 @@ package ru.ifmo.iorthant.noq2d
 import scala.collection.mutable.ArrayBuffer
 
 import ru.ifmo.iorthant.util.Syntax._
-import ru.ifmo.iorthant.util.{Dominance, HasMinus, Monoid, Specialization}
+import ru.ifmo.iorthant.util.{Dominance, HasNegation, Monoid, Specialization}
 
 class PlainArray[@specialized(Specialization.defaultSet) T](implicit m: Monoid[T])
   extends NoUpdateIncrementalOrthantSearch[T] {
@@ -43,7 +43,7 @@ class PlainArray[@specialized(Specialization.defaultSet) T](implicit m: Monoid[T
   }
 
   override def removeDataPoint(handle: DataPointHandle)
-                              (implicit hm: HasMinus[T]): Unit = {
+                              (implicit hm: HasNegation[T]): Unit = {
     val point = handle.point
     val value = handle.value
     for (q <- queryPoints) {

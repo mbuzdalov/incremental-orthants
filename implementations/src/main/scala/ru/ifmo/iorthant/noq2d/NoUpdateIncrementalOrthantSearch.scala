@@ -1,6 +1,6 @@
 package ru.ifmo.iorthant.noq2d
 
-import ru.ifmo.iorthant.util.{HasMinus, Specialization}
+import ru.ifmo.iorthant.util.{HasNegation, Specialization}
 
 trait NoUpdateIncrementalOrthantSearch[@specialized(Specialization.defaultSet) T] {
   type DataPointHandle
@@ -16,12 +16,12 @@ trait NoUpdateIncrementalOrthantSearch[@specialized(Specialization.defaultSet) T
 
   def makeQuery(point: Array[Double]): T
 
-  def removeDataPoint(handle: DataPointHandle)(implicit hm: HasMinus[T]): Unit
+  def removeDataPoint(handle: DataPointHandle)(implicit hm: HasNegation[T]): Unit
   def removeQueryPoint(handle: QueryPointHandle): Unit
 }
 
 object NoUpdateIncrementalOrthantSearch {
   trait UpdateTracker[@specialized(Specialization.defaultSet) T, @specialized(Specialization.defaultSet) I] {
-    def valueChanged(oldValue: T, newValue: T, identifier: I): Unit
+    def valueChanged(delta: T, identifier: I): Unit
   }
 }

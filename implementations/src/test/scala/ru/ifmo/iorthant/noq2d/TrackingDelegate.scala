@@ -2,7 +2,7 @@ package ru.ifmo.iorthant.noq2d
 
 import scala.collection.mutable.ArrayBuffer
 
-import ru.ifmo.iorthant.util.{HasMinus, Specialization}
+import ru.ifmo.iorthant.util.{HasNegation, Specialization}
 
 class TrackingDelegate[@specialized(Specialization.defaultSet) T](val impl: NoUpdateIncrementalOrthantSearch[T])
   extends NoUpdateIncrementalOrthantSearch[T] with NoUpdateIncrementalOrthantSearch.UpdateTracker[T, Array[Double]] {
@@ -25,11 +25,11 @@ class TrackingDelegate[@specialized(Specialization.defaultSet) T](val impl: NoUp
   override def makeQuery(point: Array[Double]): T = impl.makeQuery(point)
 
   override def removeDataPoint(handle: DataPointHandle)
-                              (implicit hm: HasMinus[T]): Unit = impl.removeDataPoint(handle)
+                              (implicit hm: HasNegation[T]): Unit = impl.removeDataPoint(handle)
 
   override def removeQueryPoint(handle: QueryPointHandle): Unit = impl.removeQueryPoint(handle)
 
-  override def valueChanged(oldValue: T, newValue: T, point: Array[Double]): Unit = myEvents += TrackingDelegate.ValueChanged(point, newValue)
+  override def valueChanged(delta: T, point: Array[Double]): Unit = myEvents += TrackingDelegate.ValueChanged(point, delta)
 
   def expectChange(point: Array[Double], value: T): Unit = {
     val vc = TrackingDelegate.ValueChanged(point, value)
