@@ -86,7 +86,7 @@ class SmokeTest {
         naive.trimPopulation(newSize)
         orthant.trimPopulation(newSize)
       } else {
-        val newItem = Array.fill(dim)(rng.nextInt(5).toDouble)
+        val newItem = Array.fill(dim)(rng.nextInt(5).toDouble).sorted
         val newGenotype = z.toString
         naive.addIndividual(newGenotype, newItem)
         orthant.addIndividual(newGenotype, newItem)
