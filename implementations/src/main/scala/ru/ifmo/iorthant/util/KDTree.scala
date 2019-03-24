@@ -8,7 +8,8 @@ abstract class KDTree[D] {
   final def add(point: Array[Double], data: D): KDTree[D] = add(point, data, 0)
   protected def add(point: Array[Double], data: D, index: Int): KDTree[D]
   def remove(point: Array[Double], data: D): KDTree[D]
-  def forDominating(ctx: KDTree.TraverseContext[D]): Unit
+  final def forDominating(ctx: KDTree.TraverseContext[D]): Unit = forDominatingImpl(ctx, (1 << ctx.point.length) - 1)
+  protected def forDominatingImpl(ctx: KDTree.TraverseContext[D], mask: Int): Unit
   def isEmpty: Boolean
 }
 
@@ -33,7 +34,7 @@ object KDTree {
 
   private class Empty[D] extends KDTree[D] {
     override def add(point: Array[Double], data: D, index: Int): KDTree[D] = new Leaf(point, data)
-    override def forDominating(ctx: TraverseContext[D]): Unit = {}
+    override protected def forDominatingImpl(ctx: TraverseContext[D], mask: Int): Unit = {}
     override def remove(point: Array[Double], data: D): KDTree[D] = {
       throw new IllegalArgumentException("No point can be in an empty KDTree")
     }
@@ -58,10 +59,18 @@ object KDTree {
       }
     }
 
-    override def forDominating(ctx: TraverseContext[D]): Unit = {
-      left.forDominating(ctx)
-      if (ctx.point(index) > value) {
-        right.forDominating(ctx)
+    override protected def forDominatingImpl(ctx: TraverseContext[D], mask: Int): Unit = {
+      val bit = 1 << index
+      if ((mask & bit) == 0) {
+        left.forDominatingImpl(ctx, mask)
+        right.forDominatingImpl(ctx, mask)
+      } else {
+        if (ctx.point(index) > value) {
+          left.forDominatingImpl(ctx, mask & ~bit)
+          right.forDominatingImpl(ctx, mask)
+        } else {
+          left.forDominatingImpl(ctx, mask)
+        }
       }
     }
 
@@ -101,8 +110,8 @@ object KDTree {
       }
     }
 
-    override def forDominating(ctx: TraverseContext[D]): Unit = {
-      if (ctx.isDominatedBy(point)) {
+    override protected def forDominatingImpl(ctx: TraverseContext[D], mask: Int): Unit = {
+      if (mask == 0 || ctx.isDominatedBy(point)) {
         ctx.update(data0)
         if (dataMore != null) {
           for (d <- dataMore) ctx.update(d)
