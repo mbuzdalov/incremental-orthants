@@ -35,7 +35,12 @@ class OrthantImplementation[T](kappa: Double, maxIndividuals: Int, dimension: In
   override def trimPopulation(size: Int): Unit = {
     while (queue.size > size) {
       val worst = queue.removeSmallest()
-      worst.holders.foreach(_.removeMe)
+      val holders = worst.holders
+      var d = holders.length - 1
+      while (d >= 0) {
+        holders(d).removeMe(trees(d), d, worst, hash0)
+        d -= 1
+      }
     }
   }
   override def fillPopulation(target: Array[T]): Unit = queue.foreachWithIndex((h, i) => target(i) = h.genotype)
@@ -62,8 +67,8 @@ object OrthantImplementation {
     rv
   }
 
-  private class RemovalHolder[T](tree: SimpleKD[Double], private val point: Array[Double],
-                                 index: Int, private val value: Double, holder: IndividualHolder[T],
+  private class RemovalHolder[T](tree: SimpleKD[Double], point: Array[Double],
+                                 index: Int, value: Double, holder: IndividualHolder[T],
                                  hash0: HasherType[T])
                                 (implicit m: Monoid[Double]) {
     private val queryPoint = tree.addQueryPoint(point, holder, index)
@@ -73,21 +78,25 @@ object OrthantImplementation {
       val buf = hash0.getOrElseUpdate(this, new ArrayBuffer())
       for (other <- buf) {
         val otherH = other.holders(0)
-        queryPoint.plus(otherH.value)
+        queryPoint.plus(otherH.dataPoint.value)
         otherH.queryPoint.plus(value)
       }
       buf += holder
     }
 
-    def removeMe(implicit m: HasNegation[Double]): Unit = {
+    def removeMe(tree: SimpleKD[Double],
+                 index: Int,
+                 holder: IndividualHolder[T],
+                 hash0: HasherType[T])(implicit m: HasNegation[Double]): Unit = {
       tree.removeDataPoint(dataPoint)
       tree.removeQueryPoint(queryPoint)
       if (index == 0) {
         val buf = hash0(this)
         buf -= holder
+        val value = dataPoint.value
         for (other <- buf) {
           val otherH = other.holders(0)
-          queryPoint.minus(otherH.value)
+          queryPoint.minus(otherH.dataPoint.value)
           otherH.queryPoint.minus(value)
         }
       }
@@ -95,10 +104,10 @@ object OrthantImplementation {
 
     // this class also acts as a hash tag for the index == 0 case.
 
-    override def hashCode(): Int = java.util.Arrays.hashCode(point)
+    override def hashCode(): Int = java.util.Arrays.hashCode(dataPoint.point)
 
     override def equals(obj: Any): Boolean = obj match {
-      case h: RemovalHolder[T] => java.util.Arrays.equals(point, h.point)
+      case h: RemovalHolder[T] => java.util.Arrays.equals(dataPoint.point, h.dataPoint.point)
       case _ => false
     }
   }
@@ -111,7 +120,7 @@ object OrthantImplementation {
   private val defaultDoubleMonoid = new DefaultDoubleMonoid
 
   private class IndividualHolder[T](val genotype: T,
-                                    val multipliers: Array[Double],
+                                    multipliers: Array[Double],
                                     val holders: Array[RemovalHolder[T]],
                                     queue: PriorityQueueWithReferences[IndividualHolder[T]])
     extends PriorityQueueWithReferences.HasIndex
