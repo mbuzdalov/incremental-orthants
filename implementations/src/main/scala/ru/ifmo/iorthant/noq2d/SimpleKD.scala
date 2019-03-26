@@ -1,6 +1,7 @@
 package ru.ifmo.iorthant.noq2d
 
 import ru.ifmo.iorthant.util._
+import ru.ifmo.iorthant.util.kd.{DecreasingTree, IncreasingTree}
 
 class SimpleKD[@specialized(Specialization.defaultSet) T](minNonStrictCoordinate: Int)(implicit m: Monoid[T])
   extends NoUpdateIncrementalOrthantSearch[T] {
@@ -11,13 +12,13 @@ class SimpleKD[@specialized(Specialization.defaultSet) T](minNonStrictCoordinate
   override def newDataPointHandleArray(n: Int): Array[DataPointHandle] = new Array[DataPointHandle](n)
   override def newQueryPointHandleArray(n: Int): Array[QueryPointHandle] = new Array[QueryPointHandle](n)
 
-  private var dataPoints: KDTree[DataPointHandle] = KDTree.empty
-  private var queryPoints: KDTree[QueryPointHandle] = KDTree.empty
+  private var dataPoints: KDTree[DataPointHandle] = IncreasingTree.empty
+  private var queryPoints: KDTree[QueryPointHandle] = DecreasingTree.empty
 
   override def addDataPoint(point: Array[Double], value: T): DataPointHandle = {
     val handle = new DataWrapper[T](point, value)
     dataPoints = dataPoints.add(point, handle)
-    queryPoints.forDominating(new SimpleKD.AddContext[T](Arrays.negate(point), value, minNonStrictCoordinate))
+    queryPoints.forDominating(new SimpleKD.AddContext[T](point, value, minNonStrictCoordinate))
     handle
   }
 
@@ -25,7 +26,7 @@ class SimpleKD[@specialized(Specialization.defaultSet) T](minNonStrictCoordinate
                                 tracker: NoUpdateIncrementalOrthantSearch.UpdateTracker[T, I],
                                 identifier: I): QueryPointHandle = {
     val value = makeQuery(point)
-    val handle = new QueryWrapper.Tracking(Arrays.negate(point), value, tracker, identifier)
+    val handle = new QueryWrapper.Tracking(point, value, tracker, identifier)
     queryPoints = queryPoints.add(handle.point, handle)
     handle
   }
@@ -39,7 +40,7 @@ class SimpleKD[@specialized(Specialization.defaultSet) T](minNonStrictCoordinate
   override def removeDataPoint(handle: DataPointHandle)
                               (implicit hm: HasNegation[T]): Unit = {
     dataPoints = dataPoints.remove(handle.point, handle)
-    queryPoints.forDominating(new SimpleKD.RemoveContext[T](Arrays.negate(handle.point), handle.value, minNonStrictCoordinate))
+    queryPoints.forDominating(new SimpleKD.RemoveContext[T](handle.point, handle.value, minNonStrictCoordinate))
   }
 
   override def removeQueryPoint(handle: QueryPointHandle): Unit = {
@@ -48,8 +49,9 @@ class SimpleKD[@specialized(Specialization.defaultSet) T](minNonStrictCoordinate
 }
 
 object SimpleKD {
-  class QueryContext[@specialized(Specialization.defaultSet) T](val point: Array[Double], minNonStrictCoordinate: Int)
-                                                               (implicit m: Monoid[T])
+  private class QueryContext[@specialized(Specialization.defaultSet) T](val point: Array[Double],
+                                                                        minNonStrictCoordinate: Int)
+                                                                       (implicit m: Monoid[T])
     extends KDTree.TraverseContext[DataWrapper[T]] {
     private var v = m.zero
     def value: T = v
@@ -61,25 +63,27 @@ object SimpleKD {
     }
   }
 
-  class AddContext[@specialized(Specialization.defaultSet) T](val point: Array[Double], val value: T, minNonStrictCoordinate: Int)
-                                                             (implicit m: Monoid[T])
+  private class AddContext[@specialized(Specialization.defaultSet) T](val point: Array[Double], val value: T,
+                                                                      minNonStrictCoordinate: Int)
+                                                                     (implicit m: Monoid[T])
     extends KDTree.TraverseContext[QueryWrapper[T]] {
     override def update(data: QueryWrapper[T]): Unit = {
       data.plus(value)
     }
     override def isDominatedBy(point: Array[Double]): Boolean = {
-      Dominance.partial(point, this.point, minNonStrictCoordinate)
+      Dominance.partial(this.point, point, minNonStrictCoordinate)
     }
   }
 
-  class RemoveContext[@specialized(Specialization.defaultSet) T](val point: Array[Double], val value: T, minNonStrictCoordinate: Int)
-                                                                (implicit m: HasNegation[T])
+  private class RemoveContext[@specialized(Specialization.defaultSet) T](val point: Array[Double], val value: T,
+                                                                         minNonStrictCoordinate: Int)
+                                                                        (implicit m: HasNegation[T])
     extends KDTree.TraverseContext[QueryWrapper[T]] {
     override def update(data: QueryWrapper[T]): Unit = {
       data.minus(value)
     }
     override def isDominatedBy(point: Array[Double]): Boolean = {
-      Dominance.partial(point, this.point, minNonStrictCoordinate)
+      Dominance.partial(this.point, point, minNonStrictCoordinate)
     }
   }
 }
