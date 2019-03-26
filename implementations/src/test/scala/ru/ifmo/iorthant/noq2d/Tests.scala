@@ -136,12 +136,3 @@ abstract class Tests {
     }
   }
 }
-
-object Tests {
-  class PlainArrayTests extends Tests {
-    override def makeDataStructure(): NoUpdateIncrementalOrthantSearch[Int] = new PlainArray[Int]()
-  }
-  class SimpleKDTests extends Tests {
-    override def makeDataStructure(): NoUpdateIncrementalOrthantSearch[Int] = new SimpleKD[Int](0)
-  }
-}

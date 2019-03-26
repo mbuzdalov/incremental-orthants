@@ -71,16 +71,3 @@ abstract class Tests {
     Assert.assertEquals("i2", place(5))
   }
 }
-
-object Tests {
-  class NaiveImplementationTests extends Tests {
-    override def makeAlgorithm[T : ClassTag](kappa: Double, maxSize: Int, dimension: Int): EpsilonIBEAFitness[T] = {
-      new NaiveImplementation[T](kappa, maxSize)
-    }
-  }
-  class OrthantImplementationTests extends Tests {
-    override def makeAlgorithm[T : ClassTag](kappa: Double, maxSize: Int, dimension: Int): EpsilonIBEAFitness[T] = {
-      new OrthantImplementation[T](kappa, maxSize, dimension)
-    }
-  }
-}
