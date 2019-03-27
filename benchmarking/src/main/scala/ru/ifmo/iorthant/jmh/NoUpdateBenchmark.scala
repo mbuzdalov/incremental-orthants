@@ -10,7 +10,7 @@ import ru.ifmo.iorthant.util.{DataGenerator, HasNegation, LiveDeadSet, Monoid}
 
 @State(Scope.Benchmark)
 @BenchmarkMode(Array(Mode.AverageTime))
-@OutputTimeUnit(TimeUnit.MICROSECONDS)
+@OutputTimeUnit(TimeUnit.SECONDS)
 @Timeout(time = 1, timeUnit = TimeUnit.HOURS)
 @Warmup(iterations = 1, time = 6)
 @Measurement(iterations = 1, time = 1)
@@ -19,11 +19,11 @@ class NoUpdateBenchmark {
   import NoUpdateBenchmark._
 
   //noinspection VarCouldBeVal: this inspection shall be suppressed for everything @Param
-  @Param(Array("10", "31", "100", "316", "1000"))
+  @Param(Array("10", "31", "100", "316", "1000", "3162"))
   private var n: Int = _
 
   //noinspection VarCouldBeVal: this inspection shall be suppressed for everything @Param
-  @Param(Array("2", "3", "5", "7", "10"))
+  @Param(Array("2", "3", "4", "5", "7", "10"))
   private var d: Int = _
 
   //noinspection VarCouldBeVal: this inspection shall be suppressed for everything @Param
@@ -37,14 +37,14 @@ class NoUpdateBenchmark {
   private var instances: Array[Array[Action]] = _
 
   @Setup
-  def initialize(): Unit = instances = Array.tabulate(10) { i =>
+  def initialize(): Unit = instances = Array.tabulate(3) { i =>
     // intentionally do not depend on "algorithm"
     val rng = new Random(i * 72433566236111L + n * 623432 + d * 91274635553235L + test.hashCode)
     val queryIndices, dataIndices = new LiveDeadSet(n)
     val actions = Array.newBuilder[Action]
     var wasQueryFull, wasDataFull = false
     val generator = DataGenerator.lookup(test)
-    for (_ <- 0 until 10 * n) {
+    for (_ <- 0 until 4 * n) {
       if (rng.nextBoolean()) {
         if (rng.nextDouble() < (1 - math.pow(2, queryIndices.nLive - n)) / (1 - math.pow(2, -n))) {
           // add a query
@@ -69,6 +69,7 @@ class NoUpdateBenchmark {
     actions.result()
   }
 
+  @OperationsPerInvocation(3)
   @Benchmark
   def benchmark(bh: Blackhole): Unit = {
     for (actions <- instances) {
