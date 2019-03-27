@@ -1,5 +1,7 @@
 package ru.ifmo.iorthant.ibea
 
+import java.util.{Arrays => JArrays}
+
 import ru.ifmo.iorthant.noq2d.{NoUpdateIncrementalOrthantSearch, SimpleKD}
 import ru.ifmo.iorthant.util.{HasNegation, Monoid, PriorityQueueWithReferences}
 
@@ -75,7 +77,7 @@ object OrthantImplementation {
     private val dataPoint = tree.addDataPoint(point, value)
 
     if (index == 0) {
-      val buf = hash0.getOrElseUpdate(this, new ArrayBuffer())
+      val buf = hash0.getOrElseUpdate(this, new ArrayBuffer(2))
       for (other <- buf) {
         val otherH = other.holders(0)
         queryPoint.plus(otherH.dataPoint.value)
@@ -104,10 +106,10 @@ object OrthantImplementation {
 
     // this class also acts as a hash tag for the index == 0 case.
 
-    override def hashCode(): Int = java.util.Arrays.hashCode(dataPoint.point)
+    override def hashCode(): Int = JArrays.hashCode(dataPoint.point)
 
     override def equals(obj: Any): Boolean = obj match {
-      case h: RemovalHolder[T] => java.util.Arrays.equals(dataPoint.point, h.dataPoint.point)
+      case h: RemovalHolder[T] => JArrays.equals(dataPoint.point, h.dataPoint.point)
       case _ => false
     }
   }
