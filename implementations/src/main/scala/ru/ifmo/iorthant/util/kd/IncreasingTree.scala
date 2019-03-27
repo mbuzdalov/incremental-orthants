@@ -106,7 +106,7 @@ object IncreasingTree {
       if (mask == 0 || ctx.isDominatedBy(point)) {
         ctx.update(data0)
         if (dataMore != null) {
-          for (d <- dataMore) ctx.update(d)
+          dataMore.foreach(ctx.update)
         }
       }
     }
@@ -118,9 +118,10 @@ object IncreasingTree {
         } else {
           val lastIndex = dataMore.size - 1
           data0 = dataMore(lastIndex)
-          dataMore.remove(lastIndex)
-          if (dataMore.isEmpty) {
+          if (lastIndex == 0) {
             dataMore = null
+          } else {
+            dataMore.reduceToSize(lastIndex)
           }
           this
         }

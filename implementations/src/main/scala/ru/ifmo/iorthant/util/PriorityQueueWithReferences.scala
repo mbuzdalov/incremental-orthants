@@ -39,7 +39,7 @@ class PriorityQueueWithReferences[T <: PriorityQueueWithReferences.HasIndex with
       arr(0) = arr(cnt)
       siftDown(0)
     }
-    arr(cnt) = null.asInstanceOf[T]
+    arr(cnt) = _
     rv.index = -1
     rv
   }

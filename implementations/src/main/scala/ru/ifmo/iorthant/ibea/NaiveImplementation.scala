@@ -2,8 +2,6 @@ package ru.ifmo.iorthant.ibea
 
 import scala.reflect.ClassTag
 
-import ru.ifmo.iorthant.util.Arrays
-
 class NaiveImplementation[T : ClassTag](kappa: Double, maxIndividuals: Int) extends EpsilonIBEAFitness[T] {
   private[this] val individuals = new Array[T](maxIndividuals)
   private[this] val objectives = new Array[Array[Double]](maxIndividuals)
@@ -34,10 +32,14 @@ class NaiveImplementation[T : ClassTag](kappa: Double, maxIndividuals: Int) exte
         i += 1
       }
       count -= 1
-      Arrays.swap(individuals, worst, count)
-      Arrays.swap(objectives, worst, count)
-      Arrays.swap(potentials, worst, count)
-      addToPotentials(objectives(count), count)
+
+      val ow = objectives(worst)
+      individuals(worst) = individuals(count)
+      individuals(count) = _
+      objectives(worst) = objectives(count)
+      objectives(count) = _
+      potentials(worst) = potentials(count)
+      addToPotentials(ow, count)
     }
   }
 
