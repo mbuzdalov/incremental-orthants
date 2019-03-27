@@ -40,7 +40,7 @@ class OrthantImplementation[T](kappa: Double, maxIndividuals: Int, dimension: In
       val holders = worst.holders
       var d = holders.length - 1
       while (d >= 0) {
-        holders(d).removeMe(trees(d), d, worst, hash0)
+        holders(d).removeMe(trees(d), d, hash0)
         d -= 1
       }
     }
@@ -50,7 +50,7 @@ class OrthantImplementation[T](kappa: Double, maxIndividuals: Int, dimension: In
 }
 
 object OrthantImplementation {
-  private type HasherType[T] = mutable.HashMap[RemovalHolder[T], ArrayBuffer[IndividualHolder[T]]]
+  private type HasherType[T] = mutable.HashMap[RemovalHolder[T], ArrayBuffer[RemovalHolder[T]]]
 
   private def projectPoint(src: Array[Double], index: Int): Array[Double] = {
     val len = src.length
@@ -79,28 +79,33 @@ object OrthantImplementation {
     if (index == 0) {
       val buf = hash0.getOrElseUpdate(this, new ArrayBuffer(2))
       for (other <- buf) {
-        val otherH = other.holders(0)
-        queryPoint.plus(otherH.dataPoint.value)
-        otherH.queryPoint.plus(value)
+        queryPoint.plus(other.dataPoint.value)
+        other.queryPoint.plus(value)
       }
-      buf += holder
+      buf += this
     }
 
     def removeMe(tree: SimpleKD[Double],
                  index: Int,
-                 holder: IndividualHolder[T],
                  hash0: HasherType[T])(implicit m: HasNegation[Double]): Unit = {
       tree.removeDataPoint(dataPoint)
       tree.removeQueryPoint(queryPoint)
       if (index == 0) {
         val buf = hash0(this)
-        buf -= holder
+        removeExactlyMe(buf, buf.size - 1)
         val value = dataPoint.value
         for (other <- buf) {
-          val otherH = other.holders(0)
-          queryPoint.minus(otherH.dataPoint.value)
-          otherH.queryPoint.minus(value)
+          queryPoint.minus(other.dataPoint.value)
+          other.queryPoint.minus(value)
         }
+      }
+    }
+
+    private def removeExactlyMe(buf: ArrayBuffer[RemovalHolder[T]], i: Int): Unit = {
+      if (buf(i) eq this) {
+        buf.remove(i)
+      } else {
+        removeExactlyMe(buf, i - 1)
       }
     }
 
