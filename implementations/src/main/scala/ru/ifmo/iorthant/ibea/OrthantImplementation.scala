@@ -30,7 +30,7 @@ class OrthantImplementation[T](kappa: Double, maxIndividuals: Int, dimension: In
     queue.add(holder)
     d = 0
     while (d < dimension) {
-      removalHolders(d) = new RemovalHolder(trees(d), projectPoint(fitness, d), d, math.exp(-fitness(d) / kappa), holder, hash0)
+      removalHolders(d) = new RemovalHolder(trees(d), projectPoint(fitness, d), d, 1.0 / multipliers(d), holder, hash0)
       d += 1
     }
   }
