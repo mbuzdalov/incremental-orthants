@@ -65,7 +65,7 @@ class NoUpdateBenchmark {
       wasDataFull |= dataIndices.nDead == 0
       wasQueryFull |= queryIndices.nDead == 0
     }
-    assert(wasDataFull && wasQueryFull, s"$n: $wasDataFull, $wasQueryFull")
+    assert(n < 100 || wasDataFull && wasQueryFull, s"$n: $wasDataFull, $wasQueryFull")
     actions.result()
   }
 
