@@ -3,7 +3,7 @@ package ru.ifmo.iorthant.ibea
 import java.util.{Arrays => JArrays}
 
 import ru.ifmo.iorthant.noq2d.{NoUpdateIncrementalOrthantSearch, SimpleKD}
-import ru.ifmo.iorthant.util.{HasNegation, Monoid, PriorityQueueWithReferences}
+import ru.ifmo.iorthant.util.{HasNegation, Monoid}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -13,10 +13,11 @@ class OrthantImplementation[T](kappa: Double, maxIndividuals: Int, dimension: In
 
   private[this] implicit final val m: DefaultDoubleMonoid = defaultDoubleMonoid
   private[this] final val trees = Array.tabulate(dimension)(i => new SimpleKD[Double](i))
-  private[this] final val queue = new PriorityQueueWithReferences[IndividualHolder[T]](maxIndividuals)
+  private[this] final val queue = new Array[IndividualHolder[T]](maxIndividuals)
   private[this] final val hash0 = new HasherType[T]()
+  private[this] var queueSize = 0
 
-  override def size: Int = queue.size
+  override def size: Int = queueSize
 
   override def addIndividual(genotype: T, fitness: Array[Double]): Unit = {
     val removalHolders = new Array[RemovalHolder[T]](dimension)
@@ -26,8 +27,9 @@ class OrthantImplementation[T](kappa: Double, maxIndividuals: Int, dimension: In
       multipliers(d) = math.exp(fitness(d) / kappa)
       d += 1
     }
-    val holder = new IndividualHolder[T](genotype, multipliers, removalHolders, queue)
-    queue.add(holder)
+    val holder = new IndividualHolder[T](genotype, multipliers, removalHolders)
+    queue(queueSize) = holder
+    queueSize += 1
     d = 0
     while (d < dimension) {
       removalHolders(d) = new RemovalHolder(trees(d), projectPoint(fitness, d), d, 1.0 / multipliers(d), holder, hash0)
@@ -35,8 +37,22 @@ class OrthantImplementation[T](kappa: Double, maxIndividuals: Int, dimension: In
     }
   }
   override def trimPopulation(size: Int): Unit = {
-    while (queue.size > size) {
-      val worst = queue.removeSmallest()
+    while (queueSize > size) {
+      var worstIndex = queueSize - 1
+      var worstFitness = queue(worstIndex).fitness
+      var currIndex = worstIndex - 1
+      while (currIndex >= 0) {
+        val currFitness = queue(currIndex).fitness
+        if (currFitness < worstFitness) {
+          worstIndex = currIndex
+          worstFitness = currFitness
+        }
+        currIndex -= 1
+      }
+      val worst = queue(worstIndex)
+      queueSize -= 1
+      queue(worstIndex) = queue(queueSize)
+      queue(queueSize) = _
       val holders = worst.holders
       var d = holders.length - 1
       while (d >= 0) {
@@ -45,8 +61,21 @@ class OrthantImplementation[T](kappa: Double, maxIndividuals: Int, dimension: In
       }
     }
   }
-  override def fillPopulation(target: Array[T]): Unit = queue.foreachWithIndex((h, i) => target(i) = h.genotype)
-  override def iterateOverPotentials(fun: (T, Double) => Unit): Unit = queue.foreach(h => fun(h.genotype, h.fitness))
+  override def fillPopulation(target: Array[T]): Unit = {
+    var i = 0
+    while (i < queueSize) {
+      target(i) = queue(i).genotype
+      i += 1
+    }
+  }
+  override def iterateOverPotentials(fun: (T, Double) => Unit): Unit = {
+    var i = 0
+    while (i < queueSize) {
+      val h = queue(i)
+      fun(h.genotype, h.fitness)
+      i += 1
+    }
+  }
 }
 
 object OrthantImplementation {
@@ -128,22 +157,12 @@ object OrthantImplementation {
 
   private class IndividualHolder[T](val genotype: T,
                                     multipliers: Array[Double],
-                                    val holders: Array[RemovalHolder[T]],
-                                    queue: PriorityQueueWithReferences[IndividualHolder[T]])
-    extends PriorityQueueWithReferences.HasIndex
-      with Ordered[IndividualHolder[T]]
-      with NoUpdateIncrementalOrthantSearch.UpdateTracker[Double, Int]
+                                    val holders: Array[RemovalHolder[T]])
+    extends NoUpdateIncrementalOrthantSearch.UpdateTracker[Double, Int]
   {
     var fitness: Double = 0.0
-    override def compare(that: IndividualHolder[T]): Int = java.lang.Double.compare(fitness, that.fitness)
-
     override def valueChanged(delta: Double, identifier: Int): Unit = {
       fitness -= delta * multipliers(identifier)
-      if (delta < 0) {
-        queue.updateAfterIncrease(this)
-      } else {
-        queue.updateAfterDecrease(this)
-      }
     }
   }
 }
