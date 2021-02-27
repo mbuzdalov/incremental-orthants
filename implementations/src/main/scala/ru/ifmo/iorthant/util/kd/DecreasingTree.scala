@@ -121,7 +121,7 @@ object DecreasingTree {
           if (lastIndex == 0) {
             dataMore = null
           } else {
-            dataMore.reduceToSize(lastIndex)
+            dataMore.remove(lastIndex)
           }
           this
         }
