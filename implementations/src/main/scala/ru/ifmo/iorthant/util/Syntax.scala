@@ -8,10 +8,5 @@ object Syntax {
       that += value
       value
     }
-
-    def whereAlso(fun: T => Unit): T = {
-      fun(value)
-      value
-    }
   }
 }

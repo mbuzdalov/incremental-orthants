@@ -2,15 +2,17 @@ package ru.ifmo.iorthant.util.kd
 
 import java.util.concurrent.ThreadLocalRandom
 
+import scala.annotation.tailrec
+import scala.collection.mutable.ArrayBuffer
+
 import ru.ifmo.iorthant.util.{Arrays, KDTree}
 import ru.ifmo.iorthant.util.KDTree.TraverseContext
-
-import scala.collection.mutable.ArrayBuffer
 
 /*
  * Increasing and decreasing trees are different only in few locations (sign changed). This is for performance. Sorry.
  */
 object IncreasingTree {
+  @tailrec
   private def chooseDifferentCoordinate(a: Array[Double], b: Array[Double], first: Int): Int = {
     if (a(first) != b(first)) {
       first

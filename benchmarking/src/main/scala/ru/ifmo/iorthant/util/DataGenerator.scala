@@ -2,7 +2,7 @@ package ru.ifmo.iorthant.util
 
 import java.util.Random
 
-import ru.ifmo.iorthant.util.Syntax._
+import scala.util.chaining._
 
 trait DataGenerator {
   def generate(rng: Random, d: Int): Array[Double]
@@ -20,7 +20,7 @@ object DataGenerator {
   }
   object Plane extends DataGenerator {
     override def generate(rng: Random, d: Int): Array[Double] = {
-      Array.fill(d)(rng.nextDouble()).whereAlso(a => a(0) += 1.0 - a.sum)
+      Array.fill(d)(rng.nextDouble()).tap(a => a(0) += 1.0 - a.sum)
     }
   }
 

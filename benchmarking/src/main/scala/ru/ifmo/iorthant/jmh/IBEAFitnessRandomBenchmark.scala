@@ -4,7 +4,7 @@ import java.util.Random
 import java.util.concurrent.TimeUnit
 
 import org.openjdk.jmh.annotations._
-import org.openjdk.jmh.infra.Blackhole
+
 import ru.ifmo.iorthant.ibea.{NaiveImplementation, OrthantImplementation}
 import ru.ifmo.iorthant.util.DataGenerator
 
@@ -45,7 +45,7 @@ class IBEAFitnessRandomBenchmark {
 
   @OperationsPerInvocation(3)
   @Benchmark
-  def benchmark(bh: Blackhole): Unit = {
+  def benchmark(): Unit = {
     val maxSize = n * 2
     for (instance <- instances) {
       val a = algorithm match {

@@ -2,11 +2,12 @@ package ru.ifmo.iorthant.ibea
 
 import java.util.{Arrays => JArrays}
 
-import ru.ifmo.iorthant.noq2d.{NoUpdateIncrementalOrthantSearch, SimpleKD}
-import ru.ifmo.iorthant.util.{HasNegation, Monoid}
-
+import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+
+import ru.ifmo.iorthant.noq2d.{NoUpdateIncrementalOrthantSearch, SimpleKD}
+import ru.ifmo.iorthant.util.{HasNegation, Monoid}
 
 class OrthantImplementation[T](kappa: Double, maxIndividuals: Int, dimension: Int) extends EpsilonIBEAFitness[T] {
   import OrthantImplementation._
@@ -52,7 +53,7 @@ class OrthantImplementation[T](kappa: Double, maxIndividuals: Int, dimension: In
       val worst = queue(worstIndex)
       queueSize -= 1
       queue(worstIndex) = queue(queueSize)
-      queue(queueSize) = _
+      queue(queueSize) = null
       val holders = worst.holders
       var d = holders.length - 1
       while (d >= 0) {
@@ -130,6 +131,7 @@ object OrthantImplementation {
       }
     }
 
+    @tailrec
     private def removeExactlyMe(buf: ArrayBuffer[RemovalHolder[T]], i: Int): Unit = {
       if (buf(i) eq this) {
         buf.remove(i)

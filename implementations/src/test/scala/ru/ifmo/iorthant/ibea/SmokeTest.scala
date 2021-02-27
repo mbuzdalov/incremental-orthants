@@ -2,9 +2,10 @@ package ru.ifmo.iorthant.ibea
 
 import java.util.Random
 
-import org.junit.{Assert, Test}
-
+import scala.annotation.tailrec
 import scala.collection.mutable
+
+import org.junit.{Assert, Test}
 
 class SmokeTest {
   private def differ(a: Double, b: Double): Boolean = {
@@ -18,6 +19,7 @@ class SmokeTest {
     }
   }
 
+  @tailrec
   private def validate(iteration: Int, tuples: IndexedSeq[(Double, Int)], index: Int, last: Double, lastCount: Int): Unit = {
     if (index == tuples.size || differ(last, tuples(index)._1) && lastCount != 0) {
       if (lastCount != 0) {

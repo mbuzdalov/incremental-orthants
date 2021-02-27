@@ -7,6 +7,7 @@ class NaiveImplementation[T : ClassTag](kappa: Double, maxIndividuals: Int) exte
   private[this] val objectives = new Array[Array[Double]](maxIndividuals)
   private[this] val potentials = new Array[Double](maxIndividuals)
   private[this] var count = 0
+  private[this] val nullIndividual = individuals(0) // a cheap way to find a "null: T"
 
   override def size: Int = count
 
@@ -35,9 +36,9 @@ class NaiveImplementation[T : ClassTag](kappa: Double, maxIndividuals: Int) exte
 
       val ow = objectives(worst)
       individuals(worst) = individuals(count)
-      individuals(count) = _
+      individuals(count) = nullIndividual
       objectives(worst) = objectives(count)
-      objectives(count) = _
+      objectives(count) = null
       potentials(worst) = potentials(count)
       addToPotentials(ow, count)
     }

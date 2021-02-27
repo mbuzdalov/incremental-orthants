@@ -4,7 +4,7 @@ import java.util.Random
 import java.util.concurrent.TimeUnit
 
 import org.openjdk.jmh.annotations._
-import org.openjdk.jmh.infra.Blackhole
+
 import ru.ifmo.iorthant.noq2d.{NoUpdateIncrementalOrthantSearch, PlainArray, SimpleKD}
 import ru.ifmo.iorthant.util.{DataGenerator, HasNegation, LiveDeadSet, Monoid}
 
@@ -71,7 +71,7 @@ class NoUpdateBenchmark {
 
   @OperationsPerInvocation(3)
   @Benchmark
-  def benchmark(bh: Blackhole): Unit = {
+  def benchmark(): Unit = {
     for (actions <- instances) {
       val w = new AlgorithmWrapper(algorithm, n, n)
       for (action <- actions) {
@@ -88,7 +88,7 @@ object NoUpdateBenchmark {
       case "kd-simple"         => new SimpleKD[Double](0)(TestMonoid)
     }
     final val dataPoints = algorithm.newDataPointHandleArray(nDataPoints)
-    final val queryPoints = algorithm.newQueryPointHandleArray(nDataPoints)
+    final val queryPoints = algorithm.newQueryPointHandleArray(nQueryPoints)
   }
 
   object IgnoreTracker extends NoUpdateIncrementalOrthantSearch.UpdateTracker[Double, AnyRef] {
