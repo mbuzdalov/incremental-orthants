@@ -1,7 +1,7 @@
 lazy val commonSettings = Seq(
   organization := "ru.ifmo",
   libraryDependencies += junitInterface,
-  scalacOptions ++= Seq("-deprecation", "-feature", "-opt-warnings:_", "-unchecked"),
+  scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked"),
   scalaVersion := "3.9.0",
   fork := true
 )

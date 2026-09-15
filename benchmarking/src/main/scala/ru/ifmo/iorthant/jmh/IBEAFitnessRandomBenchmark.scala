@@ -2,11 +2,11 @@ package ru.ifmo.iorthant.jmh
 
 import java.util.Random
 import java.util.concurrent.TimeUnit
-
-import org.openjdk.jmh.annotations._
-
+import org.openjdk.jmh.annotations.*
 import ru.ifmo.iorthant.ibea.{NaiveImplementation, OrthantImplementation}
 import ru.ifmo.iorthant.util.DataGenerator
+
+import scala.compiletime.uninitialized
 
 @State(Scope.Benchmark)
 @BenchmarkMode(Array(Mode.AverageTime))
@@ -15,49 +15,42 @@ import ru.ifmo.iorthant.util.DataGenerator
 @Warmup(iterations = 1, time = 6)
 @Measurement(iterations = 1, time = 1)
 @Fork(value = 5)
-class IBEAFitnessRandomBenchmark {
+class IBEAFitnessRandomBenchmark:
 
   //noinspection VarCouldBeVal: this inspection shall be suppressed for everything @Param
   @Param(Array("10", "31", "100", "316", "1000", "3162"))
-  private var n: Int = _
+  private var n: Int = uninitialized
 
   //noinspection VarCouldBeVal: this inspection shall be suppressed for everything @Param
   @Param(Array("2", "3", "4", "5", "7", "10"))
-  private var d: Int = _
+  private var d: Int = uninitialized
 
   //noinspection VarCouldBeVal: this inspection shall be suppressed for everything @Param
   @Param(Array("naive", "orthant"))
-  private var algorithm: String = _
+  private var algorithm: String = uninitialized
 
   //noinspection VarCouldBeVal: this inspection shall be suppressed for everything @Param
   @Param(Array("plane", "cube", "line"))
-  private var test: String = _
+  private var test: String = uninitialized
 
-  private var instances: Array[Array[Array[Double]]] = _
+  private var instances: Array[Array[Array[Double]]] = uninitialized
 
   @Setup
-  def initialize(): Unit = instances = Array.tabulate(3) { i =>
+  def initialize(): Unit = instances = Array.tabulate(3): i =>
     // intentionally do not depend on "algorithm"
-    val rng = new Random(i * 72433566236111L + n * 623432 + d * 91274635553235L + test.hashCode)
+    val rng = Random(i * 72433566236111L + n * 623432 + d * 91274635553235L + test.hashCode)
     val generator = DataGenerator.lookup(test)
     Array.fill(4 * n)(generator.generate(rng, d))
-  }
 
   @OperationsPerInvocation(3)
   @Benchmark
-  def benchmark(): Unit = {
+  def benchmark(): Unit =
     val maxSize = n * 2
-    for (instance <- instances) {
-      val a = algorithm match {
+    for instance <- instances do
+      val a = algorithm match
         case "naive" => new NaiveImplementation[Unit](0.05, maxSize)
         case "orthant" => new OrthantImplementation[Unit](0.05, maxSize, d)
-      }
-      for (point <- instance) {
+      for point <- instance do
         a.addIndividual((), point)
-        if (a.size == maxSize) {
+        if a.size == maxSize then
           a.trimPopulation(n)
-        }
-      }
-    }
-  }
-}

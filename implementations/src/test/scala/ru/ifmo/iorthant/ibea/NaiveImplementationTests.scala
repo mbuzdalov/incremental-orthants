@@ -2,8 +2,6 @@ package ru.ifmo.iorthant.ibea
 
 import scala.reflect.ClassTag
 
-class NaiveImplementationTests extends Tests {
-  override def makeAlgorithm[T : ClassTag](kappa: Double, maxSize: Int, dimension: Int): EpsilonIBEAFitness[T] = {
-    new NaiveImplementation[T](kappa, maxSize)
-  }
-}
+class NaiveImplementationTests extends Tests:
+  override def makeAlgorithm[T : ClassTag](kappa: Double, maxSize: Int, dimension: Int): EpsilonIBEAFitness[T] =
+    NaiveImplementation[T](kappa, maxSize)

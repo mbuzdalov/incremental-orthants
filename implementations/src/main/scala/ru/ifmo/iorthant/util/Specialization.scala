@@ -1,5 +1,4 @@
 package ru.ifmo.iorthant.util
 
-object Specialization {
+object Specialization:
   final val defaultSet = Specializable.Bits32AndUp
-}

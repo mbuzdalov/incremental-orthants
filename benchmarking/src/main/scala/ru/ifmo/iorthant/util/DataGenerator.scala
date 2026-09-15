@@ -4,30 +4,25 @@ import java.util.Random
 
 import scala.util.chaining._
 
-trait DataGenerator {
+trait DataGenerator:
   def generate(rng: Random, d: Int): Array[Double]
-}
 
-object DataGenerator {
-  object Cube extends DataGenerator {
+object DataGenerator:
+  private object Cube extends DataGenerator:
     override def generate(rng: Random, d: Int): Array[Double] = Array.fill(d)(rng.nextDouble())
-  }
-  object Line extends DataGenerator {
-    override def generate(rng: Random, d: Int): Array[Double] = {
+
+  private object Line extends DataGenerator:
+    override def generate(rng: Random, d: Int): Array[Double] =
       val v = rng.nextDouble()
       Array.fill(d)(v)
-    }
-  }
-  object Plane extends DataGenerator {
-    override def generate(rng: Random, d: Int): Array[Double] = {
-      Array.fill(d)(rng.nextDouble()).tap(a => a(0) += 1.0 - a.sum)
-    }
-  }
 
-  def lookup(name: String): DataGenerator = name match {
+  private object Plane extends DataGenerator:
+    override def generate(rng: Random, d: Int): Array[Double] =
+      Array.fill(d)(rng.nextDouble()).tap(a => a(0) += 1.0 - a.sum)
+
+  def lookup(name: String): DataGenerator = name match
     case "cube" => Cube
     case "line" => Line
     case "plane" => Plane
     case _ => throw new IllegalArgumentException(s"Unknown generator requested: '$name'")
-  }
-}
+  

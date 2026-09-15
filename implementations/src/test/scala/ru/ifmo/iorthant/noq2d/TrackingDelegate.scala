@@ -5,7 +5,7 @@ import scala.collection.mutable.ArrayBuffer
 import ru.ifmo.iorthant.util.{HasNegation, Specialization}
 
 class TrackingDelegate[@specialized(Specialization.defaultSet) T](val impl: NoUpdateIncrementalOrthantSearch[T])
-  extends NoUpdateIncrementalOrthantSearch[T] with NoUpdateIncrementalOrthantSearch.UpdateTracker[T, Array[Double]] {
+extends NoUpdateIncrementalOrthantSearch[T] with NoUpdateIncrementalOrthantSearch.UpdateTracker[T, Array[Double]]:
   private val myEvents = new ArrayBuffer[TrackingDelegate.ValueChanged[T]]()
 
   override type DataPointHandle = impl.DataPointHandle
@@ -19,35 +19,28 @@ class TrackingDelegate[@specialized(Specialization.defaultSet) T](val impl: NoUp
   def addQueryPoint(point: Array[Double]): QueryPointHandle = impl.addQueryPoint(point, this, point)
 
   override def addQueryPoint[@specialized(Specialization.defaultSet) I](point: Array[Double],
-                                tracker: NoUpdateIncrementalOrthantSearch.UpdateTracker[T, I],
-                                identifier: I): QueryPointHandle = addQueryPoint(point)
+                             tracker: NoUpdateIncrementalOrthantSearch.UpdateTracker[T, I],
+                             identifier: I): QueryPointHandle = addQueryPoint(point)
 
   override def makeQuery(point: Array[Double]): T = impl.makeQuery(point)
 
-  override def removeDataPoint(handle: DataPointHandle)
-                              (implicit hm: HasNegation[T]): Unit = impl.removeDataPoint(handle)
+  override def removeDataPoint(handle: DataPointHandle)(using HasNegation[T]): Unit = impl.removeDataPoint(handle)
 
   override def removeQueryPoint(handle: QueryPointHandle): Unit = impl.removeQueryPoint(handle)
 
   override def valueChanged(delta: T, point: Array[Double]): Unit = myEvents += TrackingDelegate.ValueChanged(point, delta)
 
-  def expectChange(point: Array[Double], value: T): Unit = {
+  def expectChange(point: Array[Double], value: T): Unit =
     val vc = TrackingDelegate.ValueChanged(point, value)
     val index = myEvents.indexOf(vc)
-    if (index == -1) {
-      throw new IllegalStateException(s"The change (${point.mkString(",")}) => $value should have been there")
-    }
+    if index == -1 then throw IllegalStateException(s"The change (${point.mkString(",")}) => $value should have been there")
     myEvents.remove(index)
-  }
 
-  def expectNoOtherChange(): Unit = {
-    if (myEvents.nonEmpty) {
+  def expectNoOtherChange(): Unit =
+    if myEvents.nonEmpty then
       val TrackingDelegate.ValueChanged(point, value) = myEvents.head
-      throw new IllegalArgumentException(s"There are unexpected changes; the first is (${point.mkString(",")}) => $value")
-    }
-  }
-}
+      throw IllegalArgumentException(s"There are unexpected changes; the first is (${point.mkString(",")}) => $value")
+end TrackingDelegate
 
-object TrackingDelegate {
+object TrackingDelegate:
   final case class ValueChanged[@specialized(Specialization.defaultSet) T](point: Array[Double], value: T)
-}

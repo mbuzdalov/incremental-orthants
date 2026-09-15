@@ -7,92 +7,81 @@ import scala.collection.mutable
 
 import org.junit.{Assert, Test}
 
-class SmokeTest {
-  private def differ(a: Double, b: Double): Boolean = {
+class SmokeTest:
+  private def differ(a: Double, b: Double): Boolean =
     val scale = math.max(1, math.max(math.abs(a), math.abs(b)))
     math.abs(a - b) > scale * 1e-12
-  }
 
-  private def assertEquals(a: Double, b: Double, iteration: Int): Unit = {
-    if (differ(a, b)) {
-      throw new AssertionError("Iteration " + iteration + ": Expected " + a + " found " + b)
-    }
-  }
+  private def assertEquals(a: Double, b: Double, iteration: Int): Unit =
+    if differ(a, b) then
+      throw AssertionError("Iteration " + iteration + ": Expected " + a + " found " + b)
 
   @tailrec
-  private def validate(iteration: Int, tuples: IndexedSeq[(Double, Int)], index: Int, last: Double, lastCount: Int): Unit = {
-    if (index == tuples.size || differ(last, tuples(index)._1) && lastCount != 0) {
-      if (lastCount != 0) {
-        throw new AssertionError("Iteration " + iteration + s": Unbalanced non-common keys found: for value $last the balance is $lastCount")
-      }
-    } else {
+  private def validate(iteration: Int, tuples: IndexedSeq[(Double, Int)], index: Int, last: Double, lastCount: Int): Unit =
+    if index == tuples.size || differ(last, tuples(index)._1) && lastCount != 0 then
+      if lastCount != 0 then
+        throw AssertionError("Iteration " + iteration + s": Unbalanced non-common keys found: for value $last the balance is $lastCount")
+    else
       val (value, count) = tuples(index)
-      if (differ(last, value)) {
+      if differ(last, value) then
         assert(lastCount == 0)
         validate(iteration, tuples, index + 1, value, count)
-      } else {
-        validate(iteration, tuples, index + 1, value, lastCount + count)
-      }
-    }
-  }
+      else validate(iteration, tuples, index + 1, value, lastCount + count)
 
-  private def compare(a: EpsilonIBEAFitness[String], b: EpsilonIBEAFitness[String], iteration: Int): Unit = {
-    val keysOfA, keysOfB = new mutable.HashSet[String]
+  private def compare(a: EpsilonIBEAFitness[String], b: EpsilonIBEAFitness[String], iteration: Int): Unit =
+    val keysOfA, keysOfB = mutable.HashSet[String]()
     a.iterateOverPotentials((g, _) => keysOfA += g)
     b.iterateOverPotentials((g, _) => keysOfB += g)
     val commonKeys = keysOfA.intersect(keysOfB).filter(_ => false)
-    val commonHash = new mutable.HashMap[String, Double]()
-    val nonCommonMultiSet = new mutable.HashMap[Double, Int]()
-    a.iterateOverPotentials((g, f) => if (commonKeys.contains(g)) commonHash.update(g, f) else nonCommonMultiSet.update(f, nonCommonMultiSet.getOrElse(f, 0) + 1))
-    b.iterateOverPotentials((g, f) => if (commonKeys.contains(g)) assertEquals(commonHash(g), f, iteration) else nonCommonMultiSet.update(f, nonCommonMultiSet.getOrElse(f, 0) - 1))
+    val commonHash = mutable.HashMap[String, Double]()
+    val nonCommonMultiSet = mutable.HashMap[Double, Int]()
+    a.iterateOverPotentials: (g, f) => 
+      if commonKeys.contains(g) 
+      then commonHash.update(g, f) 
+      else nonCommonMultiSet.update(f, nonCommonMultiSet.getOrElse(f, 0) + 1)
+    b.iterateOverPotentials: (g, f) => 
+      if commonKeys.contains(g) 
+      then assertEquals(commonHash(g), f, iteration) 
+      else nonCommonMultiSet.update(f, nonCommonMultiSet.getOrElse(f, 0) - 1)
     val nonCommonNonZero = nonCommonMultiSet.filter(_._2 != 0)
-    if (nonCommonNonZero.nonEmpty) {
+    if nonCommonNonZero.nonEmpty then
       val sorted = nonCommonNonZero.toIndexedSeq.sortBy(_._1)
       validate(iteration, sorted, 0, Double.NaN, 0)
-    }
-  }
 
   @Test
-  def smoke(): Unit = {
+  def smoke(): Unit = 
     val dim = 2
-    val naive = new NaiveImplementation[String](0.05, 100)
-    val orthant = new OrthantImplementation[String](0.05, 100, dim)
-    val rng = new Random(667345823536361L)
-    for (z <- 0 to 10000) {
+    val naive = NaiveImplementation[String](0.05, 100)
+    val orthant = OrthantImplementation[String](0.05, 100, dim)
+    val rng = Random(667345823536361L)
+    for z <- 0 to 10000 do
       Assert.assertEquals(naive.size, orthant.size)
       compare(naive, orthant, z)
-      if (naive.size == 100 || naive.size > 90 && rng.nextBoolean()) {
+      if naive.size == 100 || naive.size > 90 && rng.nextBoolean() then
         val newSize = 1 + rng.nextInt(75)
         naive.trimPopulation(newSize)
         orthant.trimPopulation(newSize)
-      } else {
+      else
         val newItem = Array.fill(dim)(rng.nextDouble())
         val newGenotype = z.toString
         naive.addIndividual(newGenotype, newItem)
         orthant.addIndividual(newGenotype, newItem)
-      }
-    }
-  }
 
   @Test
-  def smokeInt(): Unit = {
+  def smokeInt(): Unit =
     val dim = 2
-    val naive = new NaiveImplementation[String](0.05, 100)
-    val orthant = new OrthantImplementation[String](0.05, 100, dim)
-    val rng = new Random(667345823536361L)
-    for (z <- 0 to 10000) {
+    val naive = NaiveImplementation[String](0.05, 100)
+    val orthant = OrthantImplementation[String](0.05, 100, dim)
+    val rng = Random(667345823536361L)
+    for z <- 0 to 10000 do
       Assert.assertEquals(naive.size, orthant.size)
       compare(naive, orthant, z)
-      if (naive.size == 100 || naive.size > 90 && rng.nextBoolean()) {
+      if naive.size == 100 || naive.size > 90 && rng.nextBoolean() then
         val newSize = 1 + rng.nextInt(75)
         naive.trimPopulation(newSize)
         orthant.trimPopulation(newSize)
-      } else {
+      else
         val newItem = Array.fill(dim)(rng.nextInt(5).toDouble).sorted
         val newGenotype = z.toString
         naive.addIndividual(newGenotype, newItem)
         orthant.addIndividual(newGenotype, newItem)
-      }
-    }
-  }
-}

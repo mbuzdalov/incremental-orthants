@@ -8,14 +8,14 @@ import org.junit.{Assert, Test}
 
 import ru.ifmo.iorthant.util.Dominance
 
-abstract class Tests {
-  protected implicit final val m: DefaultIntMonoid.type = DefaultIntMonoid
+abstract class Tests:
+  protected given DefaultIntMonoid.type = DefaultIntMonoid
 
   def makeDataStructure(): NoUpdateIncrementalOrthantSearch[Int]
 
   @Test
-  def oneQueryOneDataNonDominated(): Unit = {
-    val ds = new TrackingDelegate(makeDataStructure())
+  def oneQueryOneDataNonDominated(): Unit =
+    val ds = TrackingDelegate(makeDataStructure())
     val p0 = Array(1.0, 2.0)
     val p1 = Array(2.0, 1.0)
     ds.addQueryPoint(p0)
@@ -23,11 +23,10 @@ abstract class Tests {
     ds.expectNoOtherChange()
     ds.addDataPoint(p1, 7)
     ds.expectNoOtherChange()
-  }
 
   @Test
-  def oneDataOneQueryNonDominated(): Unit = {
-    val ds = new TrackingDelegate(makeDataStructure())
+  def oneDataOneQueryNonDominated(): Unit =
+    val ds = TrackingDelegate(makeDataStructure())
     val p0 = Array(1.0, 2.0)
     val p1 = Array(2.0, 1.0)
     ds.addDataPoint(p1, 7)
@@ -35,11 +34,10 @@ abstract class Tests {
     ds.addQueryPoint(p0)
     ds.expectChange(p0, 0)
     ds.expectNoOtherChange()
-  }
 
   @Test
-  def oneQueryOneDataDominated(): Unit = {
-    val ds = new TrackingDelegate(makeDataStructure())
+  def oneQueryOneDataDominated(): Unit =
+    val ds = TrackingDelegate(makeDataStructure())
     val p0 = Array(2.0, 2.0)
     val p1 = Array(1.0, 1.0)
     ds.addQueryPoint(p0)
@@ -48,11 +46,10 @@ abstract class Tests {
     ds.addDataPoint(p1, 7)
     ds.expectChange(p0, 7)
     ds.expectNoOtherChange()
-  }
 
   @Test
-  def oneDataOneQueryDominated(): Unit = {
-    val ds = new TrackingDelegate(makeDataStructure())
+  def oneDataOneQueryDominated(): Unit =
+    val ds = TrackingDelegate(makeDataStructure())
     val p0 = Array(2.0, 2.0)
     val p1 = Array(1.0, 1.0)
     ds.addDataPoint(p1, 7)
@@ -60,79 +57,62 @@ abstract class Tests {
     ds.addQueryPoint(p0)
     ds.expectChange(p0, 7)
     ds.expectNoOtherChange()
-  }
 
   @Test
-  def smokeTest(): Unit = {
+  def smokeTest(): Unit =
     class Data(val point: Array[Double], val value: Int)
-    class Query(val point: Array[Double]) {
+    class Query(val point: Array[Double]):
       var realValue: Int = 0
       var expectedValue: Int = 0
 
-      def addData(d: Data): Unit = {
-        if (Dominance.strict(d.point, point)) {
+      def addData(d: Data): Unit =
+        if Dominance.strict(d.point, point) then
           expectedValue += d.value
-        }
-      }
 
-      def removeData(d: Data): Unit = {
-        if (Dominance.strict(d.point, point)) {
+      def removeData(d: Data): Unit =
+        if Dominance.strict(d.point, point) then
           expectedValue -= d.value
-        }
-      }
 
-      def validate(dim: Int, idx: Int): Unit = {
+      def validate(dim: Int, idx: Int): Unit =
         Assert.assertEquals(s"dim = $dim, idx = $idx", expectedValue, realValue)
-      }
-    }
 
-    val tracker = new NoUpdateIncrementalOrthantSearch.UpdateTracker[Int, Query] {
-      override def valueChanged(delta: Int, identifier: Query): Unit = {
+    val tracker = new NoUpdateIncrementalOrthantSearch.UpdateTracker[Int, Query]:
+      override def valueChanged(delta: Int, identifier: Query): Unit =
         identifier.realValue += delta
-      }
-    }
+    
+    val rng = Random(8245435464734641L)
 
-    val rng = new Random(8245435464734641L)
-
-    for (dim <- 1 to 6) {
+    for dim <- 1 to 6 do
       val ds = makeDataStructure()
 
       class DataEx(point: Array[Double], value: Int, val handle: ds.DataPointHandle) extends Data(point, value)
-      class QueryEx(point: Array[Double]) extends Query(point) {
+      class QueryEx(point: Array[Double]) extends Query(point):
         val handle: ds.QueryPointHandle = ds.addQueryPoint(point, tracker, this)
-      }
 
       val dataPoints = new ArrayBuffer[DataEx]()
       val queryPoints = new ArrayBuffer[QueryEx]()
 
-      for (j <- 0 to 1000) {
-        if (rng.nextBoolean()) {
-          if (dataPoints.nonEmpty && rng.nextInt(10) < 3) {
+      for j <- 0 to 1000 do
+        if rng.nextBoolean() then
+          if dataPoints.nonEmpty && rng.nextInt(10) < 3 then
             val d = dataPoints(rng.nextInt(dataPoints.size))
             dataPoints -= d
             for (q <- queryPoints) q.removeData(d)
             ds.removeDataPoint(d.handle)
-          } else {
+          else
             val newDataPoint = Array.fill(dim)(rng.nextInt(10).toDouble)
             val newDataValue = rng.nextInt(623524352) - 383253461
-            val d = new DataEx(newDataPoint, newDataValue, ds.addDataPoint(newDataPoint, newDataValue))
+            val d = DataEx(newDataPoint, newDataValue, ds.addDataPoint(newDataPoint, newDataValue))
             dataPoints += d
             for (q <- queryPoints) q.addData(d)
-          }
-        } else {
-          if (queryPoints.nonEmpty && rng.nextInt(10) < 3) {
+        else
+          if queryPoints.nonEmpty && rng.nextInt(10) < 3 then
             val q = queryPoints(rng.nextInt(queryPoints.size))
             queryPoints -= q
             ds.removeQueryPoint(q.handle)
-          } else {
+          else
             val newQueryPoint = Array.fill(dim)(rng.nextInt(10).toDouble)
-            val q = new QueryEx(newQueryPoint) // adds itself to the data structure
+            val q = QueryEx(newQueryPoint) // adds itself to the data structure
             queryPoints += q
             for (d <- dataPoints) q.addData(d)
-          }
-        }
         queryPoints.foreach(_.validate(dim, j))
-      }
-    }
-  }
-}
